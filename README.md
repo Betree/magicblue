@@ -1,6 +1,14 @@
 # pyMagicBlue
 Python script and library to control Magic Blue bulbs over bluetooth
 
+You can get more details by checking the [Wiki pages](https://github.com/Betree/pyMagicBlue/wiki).
+
+I haven't fully retro-engineered the protocol yet so it's not complete but
+[Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
+[How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
+should give you enough details to start working on your own implementation if you need to port this for another
+language / platform
+
 Tested on Linux only. I'll be happy to get your feedback on other platforms !
 
 ## Installation
@@ -32,12 +40,3 @@ will be automatised in a future version)
     bulb.set_random_color([255, 0, 0])  # Set random
     bulb.turn_off()                     # Turn off the light
     bulb.turn_on()                      # Set white light
-
-## Details
-You can get more details on the protocol by checking the [https://github.com/Betree/pyMagicBlue/wiki](Wiki pages).
-
-I haven't fully retro-engineered the protocol yet so it's not complete but
-[Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
-[How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
-should give you enough details to start working on your own implementation if you need to port this for another
-language / platform
