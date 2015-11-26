@@ -21,11 +21,9 @@ Tested on Linux only. I'll be happy to get your feedback on other platforms !
 #### Linux
 You must use python 3+
 
-sudo apt-get install libbluetooth-dev
-
-pip install pybluez
-
-pip install gattlib
+    sudo apt-get install libbluetooth-dev
+    pip install pybluez
+    pip install gattlib
 
 ### Automatic
 TODO
