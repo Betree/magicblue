@@ -36,6 +36,6 @@ TODO
     bulb = MagicBlue(bulb_mac_address)
     bulb.connect()
     bulb.set_color([255, 0, 0])         # Set red
-    bulb.set_random_color([255, 0, 0])  # Set random
+    bulb.set_random_color()  # Set random
     bulb.turn_off()                     # Turn off the light
     bulb.turn_on()                      # Set white light
