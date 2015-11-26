@@ -9,7 +9,9 @@ Tested on Linux only. I'll be happy to get your feedback on other platforms !
 You must use python 3+
 
 sudo apt-get install libbluetooth-dev
+
 pip install pybluez
+
 pip install gattlib
 
 ### Automatic
@@ -35,7 +37,7 @@ will be automatised in a future version)
 You can get more details on the protocol by checking the [https://github.com/Betree/pyMagicBlue/wiki](Wiki pages).
 
 I haven't fully retro-engineered the protocol yet so it's not complete but
-[https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list](Characteristics list page) and
-[https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool](How to use manually with Gatttool page)
+[Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
+[How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
 should give you enough details to start working on your own implementation if you need to port this for another
 language / platform
