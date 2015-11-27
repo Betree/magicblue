@@ -17,8 +17,7 @@ On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/re
 Tested on Linux only. I'll be happy to get your feedback on other platforms !
 
 ## Installation
-### Manual
-#### Linux
+### Linux
 You must use python 3+
 
     sudo apt-get install libbluetooth-dev
