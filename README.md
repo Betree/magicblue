@@ -25,9 +25,6 @@ You must use python 3+
     pip install pybluez
     pip install gattlib
 
-### Automatic
-TODO
-
 ## Usage
 
     from magicblue import MagicBlue
