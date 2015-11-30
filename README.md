@@ -25,6 +25,7 @@ You must use python 3+
     sudo apt-get install libbluetooth-dev
     pip install pybluez
     pip install gattlib
+    pip install webcolors
 
 ## Usage
 
