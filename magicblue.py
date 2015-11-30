@@ -2,101 +2,165 @@
 # -*- coding: UTF-8 -*-
 # ========================================================================================
 # title           : magicblue.py
-# description     : Python script and library to control Magic Blue bulbs over Bluetooth
+# description     : Python tool to control Magic Blue bulbs over Bluetooth
 # author          : Benjamin Piouffle
 # date            : 23/11/2015
 # usage           : python magicblue.py
 # python_version  : 3.4
 # ========================================================================================
-
 import argparse
+import logging
 import os
-import random
 import sys
 import time
-from gattlib import GATTRequester, DiscoveryService
+import webcolors
 from sys import platform as _platform
+from gattlib import DiscoveryService
+from magicbluelib import MagicBlue
 
+__author__ = 'Benjamin Piouffle'
+__license__ = "MIT"
 __version__ = 0.1
 
-MAGIC_BLUE_MAC = 'C7:17:1D:43:39:03'
-
-# Handles
-HANDLE_CHANGE_COLOR = 0x0c
+logger = logging.getLogger(__name__)
 
 
-class MagicBlue:
-    def __init__(self, mac_address):
-        self.mac_address = mac_address
-        self.connection = None
+class MagicBlueShell:
+    def __init__(self):
+        self.available_cmds = [
+            {'cmd': 'help', 'func': self.list_commands, 'params': '', 'help': 'Show this help', 'con_required': False},
+            {'cmd': 'list_devices', 'func': self.cmd_list_devices, 'params': '', 'help': 'List Bluetooth LE devices in range', 'con_required': False},
+            {'cmd': 'connect', 'func': self.cmd_connect, 'params': 'mac_address', 'help': 'Connect to light bulb', 'con_required': False},
+            {'cmd': 'disconnect', 'func': self.cmd_disconnect, 'params': '', 'help': 'Disconnect from current light bulb', 'con_required': True},
+            {'cmd': 'set_color', 'func': self.cmd_set_color, 'params': 'name|hexvalue', 'help': "Change bulb's color", 'con_required': True},
+            {'cmd': 'turn', 'func': self.cmd_turn, 'params': 'on|off', 'help': "Turn on / off the bulb", 'con_required': True},
+            {'cmd': 'exit', 'func': self.cmd_exit, 'params': '', 'help': 'Exit the script', 'con_required': False}
+        ]
+        self._magic_blue = None
 
-    def connect(self):
-        self.connection = GATTRequester(self.mac_address, False)
-        self.connection.connect(True, "random")
-        print('Connected : {}'.format(self.connection.is_connected()))
+    def start_interactive_mode(self):
+        print('Magic Blue interactive shell v{}'.format(__version__))
+        print('Type "help" to see what you can do')
 
-    def disconnect(self):
-        self.connection.disconnect()
+        try:
+            str_cmd = ''
+            while str_cmd != 'exit':
+                str_cmd = input('> ')
+                self.exec_cmd(str_cmd)
+        except EOFError:  # Catch CTRL+D
+            self.cmd_exit()
 
-    def set_color(self, rgb_color):
-        """
-        Change bulb's color
-        :param rgb_color: color as a list of 3 values between 0 and 255
-        """
-        self.connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([0x56] + rgb_color)))
+    def exec_cmd(self, str_cmd):
+        cmd = self._get_command(str_cmd)
+        if cmd is not None:
+            if cmd['con_required'] and not (self._magic_blue and self._magic_blue.is_connected()):
+                logger.error('You must be connected to magic blue bulb to run this command')
+            else:
+                if self._check_args(str_cmd, cmd):
+                    cmd['func'](str_cmd.split()[1:])
+        else:
+            logger.error('Command "{}" is not available. Type "help" to see what you can do'.format(str_cmd.split()[0]))
 
-    def set_random_color(self):
-        self.set_color([random.randint(1, 255) for i in range(3)])
+    def print_usage(self, str_cmd):
+        cmd = self._get_command(str_cmd)
+        if cmd is not None:
+            print('Usage: {} {}'.format(cmd['cmd'], cmd['params']))
+        else:
+            logger.error('Unknow command {}'.format(str_cmd))
+        return False
 
-    def turn_off(self):
-        self.set_color([0, 0, 0])
+    def cmd_list_devices(self, *args):
+        print('Listing Bluetooth LE devices in range. Press CTRL+C to stop searching.')
+        service = DiscoveryService()
 
-    def turn_on(self, brightness=1.0):
-        """
-        Set white color on the light
-        :param brightness: a float value between 0.0 and 1.0 defining the brightness
-        """
-        self.set_color([int(255 * brightness) for i in range(3)])
+        print('{: <12} {: <12}'.format('Name', 'Mac address'))
+        print('{: <12} {: <12}'.format('----', '-----------'))
+
+        try:
+            while 42:
+                for device_mac, device_name in service.discover(2).items():
+                    print('{: <12} {: <12}'.format(device_name, device_mac))
+                print('---------------')
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print('\n')
+
+    def cmd_connect(self, *args):
+        self._magic_blue = MagicBlue(args[0][0])
+        self._magic_blue.connect()
+        logger.info('Connected : {}'.format(self._magic_blue.is_connected()))
+
+    def cmd_disconnect(self, *args):
+        self._magic_blue.disconnect()
+        self._magic_blue = None
+
+    def cmd_turn(self, *args):
+        if args[0][0] == 'on':
+            self._magic_blue.turn_on()
+        else:
+            self._magic_blue.turn_off()
+
+    def cmd_set_color(self, *args):
+        color = args[0][0]
+        try:
+            if color.startswith('#'):
+                self._magic_blue.set_color(webcolors.hex_to_rgb(color))
+            else:
+                self._magic_blue.set_color(webcolors.name_to_rgb(color))
+        except ValueError as e:
+            logger.error('Invalid color value : {}'.format(str(e)))
+            self.print_usage('set_color')
+
+    def list_commands(self, *args):
+        print(' ----------------------------')
+        print('| List of available commands |')
+        print(' ----------------------------')
+        print('{: <16}{: <25}{}'.format('COMMAND', 'PARAMETERS', 'DETAILS'))
+        print('{: <16}{: <25}{}'.format('-------', '----------', '-------'))
+        print('\n'.join(['{: <16}{: <25}{}'.format(command['cmd'], command['params'], command['help']) for command in self.available_cmds]))
+
+    def cmd_exit(self, *args):
+        print('Bye !')
+
+    def _check_args(self, str_cmd, cmd):
+        expected_nb_args = len(cmd['params'].split())
+        args = str_cmd.split()[1:]
+        if len(args) != expected_nb_args:
+            self.print_usage(str_cmd.split()[0])
+            return False
+        return True
+
+    def _get_command(self, str_cmd):
+        str_cmd = str_cmd.split()[0]
+        return next((item for item in self.available_cmds if item['cmd'] == str_cmd), None)
 
 
-def parse_cmd():
-    parser = argparse.ArgumentParser(description='Utility to manage a Magic Blue bulb over Bluetooth LE')
-    parser.add_argument('-t', '--timeout', default=10, help='Number of seconds before devices search timeout')
+def get_params():
+    parser = argparse.ArgumentParser(description='Python tool to control Magic Blue bulbs over Bluetooth')
+    parser.add_argument('-l', '--list_commands', dest='list_commands', help='List available commands')
+    parser.add_argument('-c', '--command', dest='command', help='Command to execute')
+    parser.add_argument('-m', '--mac_address', dest='mac_address', help='Device mac address. Must be set if command given in -c needs you to be connected')
     return parser.parse_args()
 
 
-def search_magic_blue(timeout):
-    service = DiscoveryService()
-
-    # Search for Magic Blue
-    print('Searching for Magic Blue bulb...')
-    while timeout >= 0:
-        devices = service.discover(2)
-        # TODO: Find another way to recognize than MAC
-        magic_blue_mac_address = next((address for address, name in devices.items() if address == MAGIC_BLUE_MAC), None)
-        if magic_blue_mac_address is not None:
-            return magic_blue_mac_address
-        time.sleep(1)
-        timeout -= 1
-
-    raise RuntimeError('Magic blue not found !')
-
-
 def main():
-    # Ask Root on Linux
-    if _platform == "linux" or _platform == "linux2":
-        if os.geteuid() != 0:
-            print("Script must be run as root")
-            args = ['sudo', sys.executable] + sys.argv + [os.environ]
-            os.execlpe('sudo', *args)
+    # Exit if not root
+    if (_platform == "linux" or _platform == "linux2") and os.geteuid() != 0:
+        logger.error("Script must be run as root")
+        return 1
 
-    # cmd_options = parse_cmd()
-    # Get bluetooth interface
-    # mac_address = search_magic_blue(service, cmd_options.timeout)
-    mac_address = MAGIC_BLUE_MAC
-
-    magic_blue = MagicBlue(mac_address)
-    magic_blue.connect()
+    params = get_params()
+    shell = MagicBlueShell()
+    if params.list_commands:
+        shell.list_commands()
+    elif params.command:
+        logging.basicConfig(level=logging.WARNING)
+        if params.mac_address:
+            shell.cmd_connect([params.mac_address])
+        shell.exec_cmd(params.command)
+    else:
+        logging.basicConfig(level=logging.INFO)
+        shell.start_interactive_mode()
     return 0
 
 
