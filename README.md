@@ -27,7 +27,6 @@ You must use python 3+
     pip install gattlib
 
 ## Usage
-<<<<<<< HEAD
 
 **Library needs root permissions to use Bluetooth features**
 
