@@ -1,5 +1,16 @@
 # pyMagicBlue
-Python script and library to control Magic Blue bulbs over bluetooth
+Python script and library to control Magic Blue bulbs over bluetooth.
+
+The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb on the market : you can get it for as low as ~8€/9$ on sites like Gearbest. It works
+pretty good and comes with mobile apps.
+
+Unfortunattely I haven't found any API or documentation for it, which is why I started this project.
+
+You can get more details by checking the Wiki pages.
+
+I haven't fully retro-engineered the protocol yet so it's not complete but Characteristics list page and How to use manually with Gatttool page should give you
+enough details to start working on your own implementation if you need to port this for another language / platform. On the research/bluetooth branch you'll
+also find capture of bluetooth packets exchanged between Android and the bulb (open hci_capture.log with Wireshark).
 
 Tested on Linux only. I'll be happy to get your feedback on other platforms !
 
@@ -8,12 +19,9 @@ Tested on Linux only. I'll be happy to get your feedback on other platforms !
 #### Linux
 You must use python 3+
 
-sudo apt-get install libbluetooth-dev
-pip install pybluez
-pip install gattlib
-
-### Automatic
-TODO
+    sudo apt-get install libbluetooth-dev
+    pip install pybluez
+    pip install gattlib
 
 ## Usage
 
