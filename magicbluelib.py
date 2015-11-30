@@ -8,9 +8,8 @@
 # python_version  : 3.4
 # ========================================================================================
 
-import time
 import random
-from gattlib import GATTRequester, DiscoveryService
+from gattlib import GATTRequester
 
 # Handles
 HANDLE_CHANGE_COLOR = 0x0c
@@ -25,14 +24,28 @@ class MagicBlue:
         self._connection = None
 
     def connect(self):
+        """
+        Connect to device
+        :return: True if connection succeed, False otherwise
+        """
         self._connection = GATTRequester(self.mac_address, False)
-        self._connection.connect(True, "random")
-        print('Connected : {}'.format(self.is_connected()))
+        try:
+            self._connection.connect(True, "random")
+        except RuntimeError as e:
+            print('Connection failed : {}'.format(e))
+            return False
+        return True
 
     def disconnect(self):
+        """
+        Disconnect from device
+        """
         self._connection.disconnect()
 
     def is_connected(self):
+        """
+        :return: True if connection succeed, False otherwise
+        """
         return self._connection.is_connected()
 
     def set_color(self, rgb_color):
@@ -43,9 +56,15 @@ class MagicBlue:
         self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color))))
 
     def set_random_color(self):
+        """
+        Change bulb's color with a random color
+        """
         self.set_color([random.randint(1, 255) for i in range(3)])
 
     def turn_off(self):
+        """
+        Turn off the light by setting color to black (rgb(0,0,0))
+        """
         self.set_color([0, 0, 0])
 
     def turn_on(self, brightness=1.0):
@@ -54,20 +73,3 @@ class MagicBlue:
         :param brightness: a float value between 0.0 and 1.0 defining the brightness
         """
         self.set_color([int(255 * brightness) for i in range(3)])
-
-
-# def search_magic_blue(timeout):
-#     service = DiscoveryService()
-#
-#     # Search for Magic Blue
-#     print('Searching for Magic Blue bulb...')
-#     while timeout >= 0:
-#         devices = service.discover(2)
-#         # TODO: Find another way to recognize than MAC
-#         magic_blue_mac_address = next((address for address, name in devices.items() if address == MAGIC_BLUE_MAC), None)
-#         if magic_blue_mac_address is not None:
-#             return magic_blue_mac_address
-#         time.sleep(1)
-#         timeout -= 1
-#
-#     raise RuntimeError('Magic blue not found !')
