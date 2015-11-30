@@ -6,8 +6,6 @@ The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb on th
 
 Unfortunattely I haven't found any API or documentation for it, which is why I started this project.
 
-You can get more details by checking the [Wiki pages](https://github.com/Betree/pyMagicBlue/wiki).
-
 I haven't fully retro-engineered the protocol yet so it's not complete but
 [Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
 [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
