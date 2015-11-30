@@ -9,6 +9,7 @@
 # python_version  : 3.4
 # ========================================================================================
 import argparse
+import logging
 import os
 import sys
 import time
@@ -17,10 +18,11 @@ from sys import platform as _platform
 from gattlib import DiscoveryService
 from magicbluelib import MagicBlue
 
-
 __author__ = 'Benjamin Piouffle'
 __license__ = "MIT"
 __version__ = 0.1
+
+logger = logging.getLogger(__name__)
 
 
 class MagicBlueShell:
@@ -52,19 +54,19 @@ class MagicBlueShell:
         cmd = self._get_command(str_cmd)
         if cmd is not None:
             if cmd['con_required'] and not (self._magic_blue and self._magic_blue.is_connected()):
-                print('You must be connected to magic blue bulb to run this command')
+                logger.error('You must be connected to magic blue bulb to run this command')
             else:
                 if self._check_args(str_cmd, cmd):
                     cmd['func'](str_cmd.split()[1:])
         else:
-            print('Command "{}" is not available. Type "help" to see what you can do'.format(str_cmd.split()[0]))
+            logger.error('Command "{}" is not available. Type "help" to see what you can do'.format(str_cmd.split()[0]))
 
     def print_usage(self, str_cmd):
         cmd = self._get_command(str_cmd)
         if cmd is not None:
             print('Usage: {} {}'.format(cmd['cmd'], cmd['params']))
         else:
-            print('Unknow command {}'.format(str_cmd))
+            logger.error('Unknow command {}'.format(str_cmd))
         return False
 
     def cmd_list_devices(self, *args):
@@ -86,7 +88,7 @@ class MagicBlueShell:
     def cmd_connect(self, *args):
         self._magic_blue = MagicBlue(args[0][0])
         self._magic_blue.connect()
-        print('Connected : {}'.format(self._magic_blue.is_connected()))
+        logger.info('Connected : {}'.format(self._magic_blue.is_connected()))
 
     def cmd_disconnect(self, *args):
         self._magic_blue.disconnect()
@@ -106,7 +108,7 @@ class MagicBlueShell:
             else:
                 self._magic_blue.set_color(webcolors.name_to_rgb(color))
         except ValueError as e:
-            print('Invalid color value : {}'.format(str(e)))
+            logger.error('Invalid color value : {}'.format(str(e)))
             self.print_usage('set_color')
 
     def list_commands(self, *args):
@@ -144,7 +146,7 @@ def get_params():
 def main():
     # Exit if not root
     if (_platform == "linux" or _platform == "linux2") and os.geteuid() != 0:
-        print("Script must be run as root")
+        logger.error("Script must be run as root")
         return 1
 
     params = get_params()
@@ -152,10 +154,12 @@ def main():
     if params.list_commands:
         shell.list_commands()
     elif params.command:
+        logging.basicConfig(level=logging.WARNING)
         if params.mac_address:
             shell.cmd_connect([params.mac_address])
         shell.exec_cmd(params.command)
     else:
+        logging.basicConfig(level=logging.INFO)
         shell.start_interactive_mode()
     return 0
 

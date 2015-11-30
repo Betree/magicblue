@@ -7,9 +7,11 @@
 # date            : 23/11/2015
 # python_version  : 3.4
 # ========================================================================================
-
+import logging
 import random
 from gattlib import GATTRequester
+
+logger = logging.getLogger(__name__)
 
 # Handles
 HANDLE_CHANGE_COLOR = 0x0c
@@ -32,7 +34,7 @@ class MagicBlue:
         try:
             self._connection.connect(True, "random")
         except RuntimeError as e:
-            print('Connection failed : {}'.format(e))
+            logger.error('Connection failed : {}'.format(e))
             return False
         return True
 
