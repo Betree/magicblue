@@ -8,7 +8,7 @@
 # usage           : python magicblue.py
 # python_version  : 3.4
 # ========================================================================================
-
+import argparse
 import os
 import sys
 import time
@@ -18,41 +18,46 @@ from gattlib import DiscoveryService
 from magicbluelib import MagicBlue
 
 
+__author__ = 'Benjamin Piouffle'
+__license__ = "MIT"
 __version__ = 0.1
 
 
-class InteractiveShellCommands:
+class MagicBlueShell:
     def __init__(self):
         self.available_cmds = [
-            {'cmd': 'help', 'func': self._cmd_help, 'params': '', 'help': 'Show this help', 'con_required': False},
-            {'cmd': 'list_devices', 'func': self._cmd_list_devices, 'params': '', 'help': 'List Bluetooth LE devices in range', 'con_required': False},
-            {'cmd': 'connect', 'func': self._cmd_connect, 'params': 'mac_address', 'help': 'Connect to light bulb', 'con_required': False},
-            {'cmd': 'disconnect', 'func': self._cmd_disconnect, 'params': '', 'help': 'Disconnect from current light bulb', 'con_required': True},
-            {'cmd': 'set_color', 'func': self._cmd_set_color, 'params': 'name|hexvalue', 'help': "Change bulb's color", 'con_required': True},
-            {'cmd': 'turn', 'func': self._cmd_turn, 'params': 'on|off', 'help': "Turn on / off the bulb", 'con_required': True},
-            {'cmd': 'exit', 'func': self._cmd_exit, 'params': '', 'help': 'Exit the script', 'con_required': False}
+            {'cmd': 'help', 'func': self.list_commands, 'params': '', 'help': 'Show this help', 'con_required': False},
+            {'cmd': 'list_devices', 'func': self.cmd_list_devices, 'params': '', 'help': 'List Bluetooth LE devices in range', 'con_required': False},
+            {'cmd': 'connect', 'func': self.cmd_connect, 'params': 'mac_address', 'help': 'Connect to light bulb', 'con_required': False},
+            {'cmd': 'disconnect', 'func': self.cmd_disconnect, 'params': '', 'help': 'Disconnect from current light bulb', 'con_required': True},
+            {'cmd': 'set_color', 'func': self.cmd_set_color, 'params': 'name|hexvalue', 'help': "Change bulb's color", 'con_required': True},
+            {'cmd': 'turn', 'func': self.cmd_turn, 'params': 'on|off', 'help': "Turn on / off the bulb", 'con_required': True},
+            {'cmd': 'exit', 'func': self.cmd_exit, 'params': '', 'help': 'Exit the script', 'con_required': False}
         ]
         self._magic_blue = None
 
-    def start(self):
+    def start_interactive_mode(self):
         print('Magic Blue interactive shell v{}'.format(__version__))
         print('Type "help" to see what you can do')
 
         try:
-            str_cmd = input('> ')
+            str_cmd = ''
             while str_cmd != 'exit':
-                cmd = self._get_command(str_cmd)
-                if cmd is not None:
-                    if cmd['con_required'] and not (self._magic_blue and self._magic_blue.is_connected()):
-                        print('You must be connected to magic blue bulb to run this command')
-                    else:
-                        if self._check_args(str_cmd, cmd):
-                            cmd['func'](str_cmd.split()[1:])
-                else:
-                    print('Command "{}" is not available. Type "help" to see what you can do'.format(str_cmd.split()[0]))
                 str_cmd = input('> ')
+                self.exec_cmd(str_cmd)
         except EOFError:  # Catch CTRL+D
-            self._cmd_exit()
+            self.cmd_exit()
+
+    def exec_cmd(self, str_cmd):
+        cmd = self._get_command(str_cmd)
+        if cmd is not None:
+            if cmd['con_required'] and not (self._magic_blue and self._magic_blue.is_connected()):
+                print('You must be connected to magic blue bulb to run this command')
+            else:
+                if self._check_args(str_cmd, cmd):
+                    cmd['func'](str_cmd.split()[1:])
+        else:
+            print('Command "{}" is not available. Type "help" to see what you can do'.format(str_cmd.split()[0]))
 
     def print_usage(self, str_cmd):
         cmd = self._get_command(str_cmd)
@@ -62,15 +67,7 @@ class InteractiveShellCommands:
             print('Unknow command {}'.format(str_cmd))
         return False
 
-    def _check_args(self, str_cmd, cmd):
-        expected_nb_args = len(cmd['params'].split())
-        args = str_cmd.split()[1:]
-        if len(args) != expected_nb_args:
-            self.print_usage(str_cmd.split()[0])
-            return False
-        return True
-
-    def _cmd_list_devices(self, *args):
+    def cmd_list_devices(self, *args):
         print('Listing Bluetooth LE devices in range. Press CTRL+C to stop searching.')
         service = DiscoveryService()
 
@@ -86,21 +83,22 @@ class InteractiveShellCommands:
         except KeyboardInterrupt:
             print('\n')
 
-    def _cmd_connect(self, *args):
+    def cmd_connect(self, *args):
         self._magic_blue = MagicBlue(args[0][0])
         self._magic_blue.connect()
+        print('Connected : {}'.format(self._magic_blue.is_connected()))
 
-    def _cmd_disconnect(self, *args):
+    def cmd_disconnect(self, *args):
         self._magic_blue.disconnect()
         self._magic_blue = None
 
-    def _cmd_turn(self, *args):
+    def cmd_turn(self, *args):
         if args[0][0] == 'on':
             self._magic_blue.turn_on()
         else:
             self._magic_blue.turn_off()
 
-    def _cmd_set_color(self, *args):
+    def cmd_set_color(self, *args):
         color = args[0][0]
         try:
             if color.startswith('#'):
@@ -111,7 +109,7 @@ class InteractiveShellCommands:
             print('Invalid color value : {}'.format(str(e)))
             self.print_usage('set_color')
 
-    def _cmd_help(self, *args):
+    def list_commands(self, *args):
         print(' ----------------------------')
         print('| List of available commands |')
         print(' ----------------------------')
@@ -119,26 +117,46 @@ class InteractiveShellCommands:
         print('{: <16}{: <25}{}'.format('-------', '----------', '-------'))
         print('\n'.join(['{: <16}{: <25}{}'.format(command['cmd'], command['params'], command['help']) for command in self.available_cmds]))
 
-    def _cmd_exit(self, *args):
+    def cmd_exit(self, *args):
         print('Bye !')
+
+    def _check_args(self, str_cmd, cmd):
+        expected_nb_args = len(cmd['params'].split())
+        args = str_cmd.split()[1:]
+        if len(args) != expected_nb_args:
+            self.print_usage(str_cmd.split()[0])
+            return False
+        return True
 
     def _get_command(self, str_cmd):
         str_cmd = str_cmd.split()[0]
         return next((item for item in self.available_cmds if item['cmd'] == str_cmd), None)
 
 
+def get_params():
+    parser = argparse.ArgumentParser(description='Python tool to control Magic Blue bulbs over Bluetooth')
+    parser.add_argument('-l', '--list_commands', dest='list_commands', help='List available commands')
+    parser.add_argument('-c', '--command', dest='command', help='Command to execute')
+    parser.add_argument('-m', '--mac_address', dest='mac_address', help='Device mac address. Must be set if command given in -c needs you to be connected')
+    return parser.parse_args()
+
+
 def main():
-    # TODO : Get cmd line option -m 'mac_address', -c 'command'
+    # Exit if not root
+    if (_platform == "linux" or _platform == "linux2") and os.geteuid() != 0:
+        print("Script must be run as root")
+        return 1
 
-    # Ask Root on Linux
-    if _platform == "linux" or _platform == "linux2":
-        if os.geteuid() != 0:
-            print("Script must be run as root")
-            args = ['sudo', sys.executable] + sys.argv + [os.environ]
-            os.execlpe('sudo', *args)
-
-    shell = InteractiveShellCommands()
-    shell.start()
+    params = get_params()
+    shell = MagicBlueShell()
+    if params.list_commands:
+        shell.list_commands()
+    elif params.command:
+        if params.mac_address:
+            shell.cmd_connect([params.mac_address])
+        shell.exec_cmd(params.command)
+    else:
+        shell.start_interactive_mode()
     return 0
 
 
