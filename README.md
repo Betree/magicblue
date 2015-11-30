@@ -19,8 +19,22 @@ TODO
 
 **Library needs root permissions to use Bluetooth features**
 
+### Using it as an API
+
+    from magicblue import MagicBlue
+    
+    bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
+    bulb = MagicBlue(bulb_mac_address)
+    bulb.connect()
+    bulb.set_color([255, 0, 0])         # Set red
+    bulb.set_random_color([255, 0, 0])  # Set random
+    bulb.turn_off()                     # Turn off the light
+    bulb.turn_on()                      # Set white light
+    
+
 ### Using it as a tool
 Script must be run as root.
+
 
 #### Using the interactive shell
 Just launch magicblue.py as root user :
@@ -73,18 +87,6 @@ So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03",
     
     sudo /usr/bin/python3.4 magicblue.py -c 'set_color red' -m C7:17:1D:43:39:03
 
-
-### Using it as an API
-
-    from magicblue import MagicBlue
-    
-    bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
-    bulb = MagicBlue(bulb_mac_address)
-    bulb.connect()
-    bulb.set_color([255, 0, 0])         # Set red
-    bulb.set_random_color([255, 0, 0])  # Set random
-    bulb.turn_off()                     # Turn off the light
-    bulb.turn_on()                      # Set white light
 
 ## Details
 You can get more details on the protocol by checking the [https://github.com/Betree/pyMagicBlue/wiki](Wiki pages).
