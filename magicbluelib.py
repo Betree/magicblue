@@ -7,6 +7,7 @@
 # date            : 23/11/2015
 # python_version  : 3.4
 # ========================================================================================
+
 import time
 import random
 from gattlib import GATTRequester, DiscoveryService
@@ -39,7 +40,7 @@ class MagicBlue:
         Change bulb's color
         :param rgb_color: color as a list of 3 values between 0 and 255
         """
-        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR] + rgb_color)))
+        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color))))
 
     def set_random_color(self):
         self.set_color([random.randint(1, 255) for i in range(3)])

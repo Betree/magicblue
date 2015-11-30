@@ -11,12 +11,12 @@
 
 import os
 import sys
-from gattlib import DiscoveryService
-
 import time
-
-from magicbluelib import MagicBlue
+import webcolors
 from sys import platform as _platform
+from gattlib import DiscoveryService
+from magicbluelib import MagicBlue
+
 
 __version__ = 0.1
 
@@ -25,11 +25,10 @@ class InteractiveShellCommands:
     def __init__(self):
         self.available_cmds = [
             {'cmd': 'help', 'func': self._cmd_help, 'params': '', 'help': 'Show this help', 'con_required': False},
-            {'cmd': 'list_devices', 'func': self._cmd_list_devices, 'params': '', 'help': 'List Bluetooth LE devices currently in range',
-             'con_required': False},
+            {'cmd': 'list_devices', 'func': self._cmd_list_devices, 'params': '', 'help': 'List Bluetooth LE devices in range', 'con_required': False},
             {'cmd': 'connect', 'func': self._cmd_connect, 'params': 'mac_address', 'help': 'Connect to light bulb', 'con_required': False},
             {'cmd': 'disconnect', 'func': self._cmd_disconnect, 'params': '', 'help': 'Disconnect from current light bulb', 'con_required': True},
-            {'cmd': 'set', 'func': self._cmd_set, 'params': 'color|brightness value', 'help': "Change bulb's color / brightness", 'con_required': True},
+            {'cmd': 'set_color', 'func': self._cmd_set_color, 'params': 'name|hexvalue', 'help': "Change bulb's color", 'con_required': True},
             {'cmd': 'turn', 'func': self._cmd_turn, 'params': 'on|off', 'help': "Turn on / off the bulb", 'con_required': True},
             {'cmd': 'exit', 'func': self._cmd_exit, 'params': '', 'help': 'Exit the script', 'con_required': False}
         ]
@@ -101,16 +100,16 @@ class InteractiveShellCommands:
         else:
             self._magic_blue.turn_off()
 
-    def _cmd_set(self, *args):
-        cmd_params = args[0]
-        if cmd_params[0] != 'color' and cmd_params[0] != 'brightness':
-            return self.print_usage('set')
-        parameter, value = cmd_params
-        print('Set {} to {}'.format(parameter, value))
-        if parameter == 'color':
-            self._magic_blue.set_color(value)
-        elif parameter == 'brightness':
-            pass  # TODO
+    def _cmd_set_color(self, *args):
+        color = args[0][0]
+        try:
+            if color.startswith('#'):
+                self._magic_blue.set_color(webcolors.hex_to_rgb(color))
+            else:
+                self._magic_blue.set_color(webcolors.name_to_rgb(color))
+        except ValueError as e:
+            print('Invalid color value : {}'.format(str(e)))
+            self.print_usage('set_color')
 
     def _cmd_help(self, *args):
         print(' ----------------------------')
@@ -129,6 +128,8 @@ class InteractiveShellCommands:
 
 
 def main():
+    # TODO : Get cmd line option -m 'mac_address', -c 'command'
+
     # Ask Root on Linux
     if _platform == "linux" or _platform == "linux2":
         if os.geteuid() != 0:
