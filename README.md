@@ -21,9 +21,7 @@ Tested on Linux only. I'll be happy to get your feedback on other platforms !
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
     sudo apt-get install libbluetooth-dev
-    pip install pybluez
-    pip install gattlib
-    pip install webcolors
+    pip install git+https://github.com/Betree/pyMagicBlue.git
 
 ## Usage
 
