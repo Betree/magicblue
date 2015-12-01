@@ -4,7 +4,7 @@ Python script and library to control Magic Blue bulbs over bluetooth.
 The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb on the market : you can get it for as low as ~8€/9$ on sites like
 [Gearbest](http://www.gearbest.com/smart-light-bulb/pp_230349.html). It works pretty good and comes with mobile apps.
 
-Unfortunattely I haven't found any API or documentation for it, which is why I started this project.
+Unfortunately I haven't found any API or documentation for it, which is why I started this project.
 
 I haven't fully retro-engineered the protocol yet so it's not complete but
 [Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
@@ -96,13 +96,3 @@ Usage is defined as follow :
 So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03", just run :
     
     sudo /usr/bin/python3.4 magicblue.py -c 'set_color red' -m C7:17:1D:43:39:03
-
-
-## Details
-You can get more details on the protocol by checking the [https://github.com/Betree/pyMagicBlue/wiki](Wiki pages).
-
-I haven't fully retro-engineered the protocol yet so it's not complete but
-[https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list](Characteristics list page) and
-[https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool](How to use manually with Gatttool page)
-should give you enough details to start working on your own implementation if you need to port this for another language / platform
-
