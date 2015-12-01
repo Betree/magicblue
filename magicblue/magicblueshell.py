@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # ========================================================================================
-# title           : magicblue.py
+# title           : magicblueshell.py
 # description     : Python tool to control Magic Blue bulbs over Bluetooth
 # author          : Benjamin Piouffle
 # date            : 23/11/2015
