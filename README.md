@@ -1,4 +1,4 @@
-# pyMagicBlue
+# magicblue
 Python script and library to control Magic Blue bulbs over bluetooth.
 
 The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb on the market : you can get it for as low as ~8€/9$ on sites like
