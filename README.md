@@ -6,8 +6,6 @@ The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb on th
 
 Unfortunattely I haven't found any API or documentation for it, which is why I started this project.
 
-You can get more details by checking the [Wiki pages](https://github.com/Betree/pyMagicBlue/wiki).
-
 I haven't fully retro-engineered the protocol yet so it's not complete but
 [Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
 [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
@@ -20,15 +18,18 @@ Tested on Linux only. I'll be happy to get your feedback on other platforms !
 
 ## Installation
 ### Linux
-You must use python 3+
+You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
     sudo apt-get install libbluetooth-dev
     pip install pybluez
     pip install gattlib
+    pip install webcolors
 
 ## Usage
 
-**Library needs root permissions to use Bluetooth features**
+**Library needs root permissions to use Bluetooth features.**
+
+If you run into problems during devices listing or connect, try to follow this procedure to ensure your Bluetooth interface works correctly : [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
 
 ### Using it as an API
 
