@@ -27,21 +27,20 @@ You must use python 3+
     pip install gattlib
 
 ## Usage
-<<<<<<< HEAD
 
 **Library needs root permissions to use Bluetooth features**
 
 ### Using it as an API
 
-    from magicblue import MagicBlue
+    >>> from magicbluelib import MagicBlue
     
-    bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
-    bulb = MagicBlue(bulb_mac_address)
-    bulb.connect()
-    bulb.set_color([255, 0, 0])         # Set red
-    bulb.set_random_color()             # Set random
-    bulb.turn_off()                     # Turn off the light
-    bulb.turn_on()                      # Set white light
+    >>> bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
+    >>> bulb = MagicBlue(bulb_mac_address)
+    >>> bulb.connect()
+    >>> bulb.set_color([255, 0, 0])         # Set red
+    >>> bulb.set_random_color()             # Set random
+    >>> bulb.turn_off()                     # Turn off the light
+    >>> bulb.turn_on()                      # Set white light
 
 ### Using it as a tool
 Script must be run as root.

@@ -14,13 +14,10 @@ import os
 import sys
 import time
 import webcolors
-from sys import platform as _platform
 from gattlib import DiscoveryService
-from magicbluelib import MagicBlue
-
-__author__ = 'Benjamin Piouffle'
-__license__ = "MIT"
-__version__ = 0.1
+from sys import platform as _platform
+from magicblue.magicbluelib import MagicBlue
+from magicblue import __version__
 
 logger = logging.getLogger(__name__)
 

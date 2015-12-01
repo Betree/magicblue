@@ -11,6 +11,8 @@ import logging
 import random
 from gattlib import GATTRequester
 
+__all__ = ['MagicBlue']
+
 logger = logging.getLogger(__name__)
 
 # Handles
