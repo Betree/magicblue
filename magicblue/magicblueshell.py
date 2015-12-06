@@ -23,16 +23,18 @@ logger = logging.getLogger(__name__)
 
 
 class MagicBlueShell:
-    def __init__(self):
+    def __init__(self, bluetooth_adapter):
         self.available_cmds = [
             {'cmd': 'help', 'func': self.list_commands, 'params': '', 'help': 'Show this help', 'con_required': False},
             {'cmd': 'list_devices', 'func': self.cmd_list_devices, 'params': '', 'help': 'List Bluetooth LE devices in range', 'con_required': False},
             {'cmd': 'connect', 'func': self.cmd_connect, 'params': 'mac_address', 'help': 'Connect to light bulb', 'con_required': False},
             {'cmd': 'disconnect', 'func': self.cmd_disconnect, 'params': '', 'help': 'Disconnect from current light bulb', 'con_required': True},
             {'cmd': 'set_color', 'func': self.cmd_set_color, 'params': 'name|hexvalue', 'help': "Change bulb's color", 'con_required': True},
+            {'cmd': 'set_warm_light', 'func': self.cmd_set_warm_light, 'params': 'intensity[0.0-1.0]', 'help': "Set warm light", 'con_required': True},
             {'cmd': 'turn', 'func': self.cmd_turn, 'params': 'on|off', 'help': "Turn on / off the bulb", 'con_required': True},
             {'cmd': 'exit', 'func': self.cmd_exit, 'params': '', 'help': 'Exit the script', 'con_required': False}
         ]
+        self.bluetooth_adapter = bluetooth_adapter
         self._magic_blue = None
 
     def start_interactive_mode(self):
@@ -67,9 +69,13 @@ class MagicBlueShell:
         return False
 
     def cmd_list_devices(self, *args):
-        print('Listing Bluetooth LE devices in range. Press CTRL+C to stop searching.')
-        service = DiscoveryService()
+        try:
+            service = DiscoveryService(self.bluetooth_adapter)
+        except RuntimeError as e:
+            logger.error('Problem with the Bluetooth adapter : {}'.format(e))
+            return False
 
+        print('Listing Bluetooth LE devices in range. Press CTRL+C to stop searching.')
         print('{: <12} {: <12}'.format('Name', 'Mac address'))
         print('{: <12} {: <12}'.format('----', '-----------'))
 
@@ -81,10 +87,12 @@ class MagicBlueShell:
                 time.sleep(1)
         except KeyboardInterrupt:
             print('\n')
+        except RuntimeError as e:
+            logger.error('Error while trying to list bluetooth devices : {}'.format(e))
 
     def cmd_connect(self, *args):
         self._magic_blue = MagicBlue(args[0][0])
-        self._magic_blue.connect()
+        self._magic_blue.connect(self.bluetooth_adapter)
         logger.info('Connected : {}'.format(self._magic_blue.is_connected()))
 
     def cmd_disconnect(self, *args):
@@ -106,6 +114,13 @@ class MagicBlueShell:
                 self._magic_blue.set_color(webcolors.name_to_rgb(color))
         except ValueError as e:
             logger.error('Invalid color value : {}'.format(str(e)))
+            self.print_usage('set_color')
+
+    def cmd_set_warm_light(self, *args):
+        try:
+            self._magic_blue.set_warm_light(float(args[0][0]))
+        except ValueError as e:
+            logger.error('Invalid intensity value : {}'.format(str(e)))
             self.print_usage('set_color')
 
     def list_commands(self, *args):
@@ -137,6 +152,7 @@ def get_params():
     parser.add_argument('-l', '--list_commands', dest='list_commands', help='List available commands')
     parser.add_argument('-c', '--command', dest='command', help='Command to execute')
     parser.add_argument('-m', '--mac_address', dest='mac_address', help='Device mac address. Must be set if command given in -c needs you to be connected')
+    parser.add_argument('-a', '--bluetooth_adapter', default='hci0', dest='bluetooth_adapter', help='Bluetooth adapter name as listed by hciconfig command')
     return parser.parse_args()
 
 
@@ -147,7 +163,7 @@ def main():
         return 1
 
     params = get_params()
-    shell = MagicBlueShell()
+    shell = MagicBlueShell(params.bluetooth_adapter)
     if params.list_commands:
         shell.list_commands()
     elif params.command:

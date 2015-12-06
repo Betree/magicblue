@@ -27,13 +27,14 @@ class MagicBlue:
         self.mac_address = mac_address
         self._connection = None
 
-    def connect(self):
+    def connect(self, bluetooth_adapter='hci0'):
         """
         Connect to device
+        :param bluetooth_adapter: bluetooth adapter name as shown by "hciconfig" command. Default : "hci0"
         :return: True if connection succeed, False otherwise
         """
-        self._connection = GATTRequester(self.mac_address, False)
         try:
+            self._connection = GATTRequester(self.mac_address, False, bluetooth_adapter)
             self._connection.connect(True, "random")
         except RuntimeError as e:
             logger.error('Connection failed : {}'.format(e))
@@ -51,6 +52,15 @@ class MagicBlue:
         :return: True if connection succeed, False otherwise
         """
         return self._connection.is_connected()
+
+    def set_warm_light(self, intensity=1.0):
+        """
+        Equivalent of what they call the "Warm light" property in the app that is a strong wight / yellow color, stronger that any value you may get by
+        setting rgb color.
+        :param intensity: the intensity between 0.0 and 1.0
+
+        """
+        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR, 0, 0, 0, int(intensity * 255)])))
 
     def set_color(self, rgb_color):
         """
