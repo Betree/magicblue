@@ -24,7 +24,7 @@ You must use python 3+ and have a proper Bluetooth 4.0 interface installed on yo
     pip install git+https://github.com/Betree/pyMagicBlue.git
 
 ### Raspberry Pi
-Gattlib may cause you some troubles if you're trying to set this project up for a Raspberry Pi. Fortunattely [Mark Otting](https://github.com/b0tting) proposed a solution for this :
+Gattlib may cause you some troubles if you're trying to set this project up for a Raspberry Pi. Fortunately [Mark Otting](https://github.com/b0tting) proposed a solution for this :
 
     Pip started installing gattlib, then handed something over to gcc and that crapped out,
     often "freezing" the Pi. It turns out that whatever it was that gattlib needed compiling
