@@ -67,7 +67,7 @@ class MagicBlue:
         Change bulb's color
         :param rgb_color: color as a list of 3 values between 0 and 255
         """
-        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color))))
+        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color) + [0x00, 0xf0, 0xaa])))
 
     def set_random_color(self):
         """
