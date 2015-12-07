@@ -53,6 +53,8 @@ If you run into problems during devices listing or connect, try to follow this p
 ### Using it as a tool
 Script must be run as root.
 
+You can always specify which bluetooth adapter (default: hci0) you want to use by specifying it with the -a option. 
+
 #### Using the interactive shell
 Just launch magicblueshell as root user :
 
@@ -70,8 +72,10 @@ Just launch magicblueshell as root user :
     connect         mac_address              Connect to light bulb
     disconnect                               Disconnect from current light bulb
     set_color       name|hexvalue            Change bulb's color
+    set_warm_light  intensity[0.0-1.0]       Set warm light
     turn            on|off                   Turn on / off the bulb
     exit                                     Exit the script
+
     > list_devices
     Listing Bluetooth LE devices in range. Press CTRL+C to stop searching.
     Name                Mac address 
