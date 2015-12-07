@@ -23,6 +23,15 @@ You must use python 3+ and have a proper Bluetooth 4.0 interface installed on yo
     sudo apt-get install libbluetooth-dev
     pip install git+https://github.com/Betree/pyMagicBlue.git
 
+### Raspberry Pi
+Gattlib may cause you some troubles if you're trying to set this project up for a Raspberry Pi. Fortunattely [Mark Otting](https://github.com/b0tting) proposed a solution for this :
+
+    Pip started installing gattlib, then handed something over to gcc and that crapped out,
+    often "freezing" the Pi. It turns out that whatever it was that gattlib needed compiling
+    ran the pi out of memory. The solution was to increase swap space to 512mb (or 1024mb on
+    a 256mb memory RPI. Also note that Raspbian uses dphys-swapfile). It takes 30 minutes or
+    so but succesfully compiled after that.
+
 ## Usage
 
 **Library needs root permissions to use Bluetooth features.**
