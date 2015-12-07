@@ -1,5 +1,5 @@
-# pyMagicBlue
-Python script and library to control Magic Blue bulbs over bluetooth.
+# magicblue - Python script and library to control Magic Blue bulbs over bluetooth
+
 
 The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb on the market : you can get it for as low as ~8€/9$ on sites like
 [Gearbest](http://www.gearbest.com/smart-light-bulb/pp_230349.html). It works pretty good and comes with mobile apps.
@@ -45,9 +45,9 @@ If you run into problems during devices listing or connect, try to follow this p
 Script must be run as root.
 
 #### Using the interactive shell
-Just launch magicblue.py as root user :
+Just launch magicblueshell as root user :
 
-    piouffb@Ordinatron-3000:~/workspace/python/pyMagicBlue$ sudo python magicblue.py 
+    piouffb@Ordinatron-3000:~/workspace/python/pyMagicBlue$ sudo magicblueshell 
     Magic Blue interactive shell v0.1
     Type "help" to see what you can do
     > help
@@ -80,7 +80,7 @@ Just launch magicblue.py as root user :
 Script can also be used by command line (for example to include it in custom shell scripts)
 Usage is defined as follow :
 
-    usage: magicblue.py [-h] [-l LIST_COMMANDS] [-c COMMAND] [-m MAC_ADDRESS]
+    usage: magicblueshell [-h] [-l LIST_COMMANDS] [-c COMMAND] [-m MAC_ADDRESS]
     
     optional arguments:
       -h, --help            show this help message and exit
@@ -93,4 +93,4 @@ Usage is defined as follow :
                             
 So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03", just run :
     
-    sudo /usr/bin/python3.4 magicblue.py -c 'set_color red' -m C7:17:1D:43:39:03
+    sudo magicblueshell -c 'set_color red' -m C7:17:1D:43:39:03
