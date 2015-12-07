@@ -60,7 +60,7 @@ class MagicBlue:
         :param intensity: the intensity between 0.0 and 1.0
 
         """
-        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR, 0, 0, 0, int(intensity * 255)])))
+        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR, 0, 0, 0, int(intensity * 255), 0x0f, 0xaa, 0x09])))
 
     def set_color(self, rgb_color):
         """
