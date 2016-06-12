@@ -11,7 +11,7 @@ setuptools.setup(
     packages=['magicblue'],
     install_requires=[
         'pybluez',
-        'gattlib',
+        'bluepy',
         'webcolors'
     ],
     include_package_data=True,

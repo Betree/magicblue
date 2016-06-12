@@ -9,7 +9,7 @@
 # ========================================================================================
 import logging
 import random
-from gattlib import GATTRequester
+import bluepy.btle
 
 __all__ = ['MagicBlue']
 
@@ -27,15 +27,14 @@ class MagicBlue:
         self.mac_address = mac_address
         self._connection = None
 
-    def connect(self, bluetooth_adapter='hci0'):
+    def connect(self, bluetooth_adapter_nr=0):
         """
         Connect to device
-        :param bluetooth_adapter: bluetooth adapter name as shown by "hciconfig" command. Default : "hci0"
+        :param bluetooth_adapter: bluetooth adapter name as shown by "hciconfig" command. Default : 0 for (hci0)
         :return: True if connection succeed, False otherwise
         """
         try:
-            self._connection = GATTRequester(self.mac_address, False, bluetooth_adapter)
-            self._connection.connect(True, "random")
+            self._connection = bluepy.btle.Peripheral(self.mac_address, bluepy.btle.ADDR_TYPE_RANDOM, bluetooth_adapter_nr)
         except RuntimeError as e:
             logger.error('Connection failed : {}'.format(e))
             return False
@@ -49,9 +48,9 @@ class MagicBlue:
 
     def is_connected(self):
         """
-        :return: True if connection succeed, False otherwise
+        :return: currently not supported anymore
         """
-        return self._connection.is_connected()
+        raise Exception("is_connected is not supported by bluepy library")
 
     def set_warm_light(self, intensity=1.0):
         """
@@ -60,14 +59,14 @@ class MagicBlue:
         :param intensity: the intensity between 0.0 and 1.0
 
         """
-        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR, 0, 0, 0, int(intensity * 255), 0x0f, 0xaa, 0x09])))
+        self._connection.writeCharacteristic(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR, 0, 0, 0, int(intensity * 255), 0x0f, 0xaa, 0x09])))
 
     def set_color(self, rgb_color):
         """
         Change bulb's color
         :param rgb_color: color as a list of 3 values between 0 and 255
         """
-        self._connection.write_by_handle(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color) + [0x00, 0xf0, 0xaa])))
+        self._connection.writeCharacteristic(HANDLE_CHANGE_COLOR, bytes(bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color) + [0x00, 0xf0, 0xaa])))
 
     def set_random_color(self):
         """
@@ -77,13 +76,16 @@ class MagicBlue:
 
     def turn_off(self):
         """
-        Turn off the light by setting color to black (rgb(0,0,0))
+        Turn off the light
         """
-        self.set_color([0, 0, 0])
+        self._connection.writeCharacteristic(HANDLE_CHANGE_COLOR,b'\xCC\x24\x33')
 
-    def turn_on(self, brightness=1.0):
+    def turn_on(self, brightness=None):
         """
         Set white color on the light
         :param brightness: a float value between 0.0 and 1.0 defining the brightness
         """
-        self.set_color([int(255 * brightness) for i in range(3)])
+        if brightness is None:
+            self._connection.writeCharacteristic(HANDLE_CHANGE_COLOR,b'\xCC\x23\x33')
+        else:
+            self.set_color([int(255 * brightness) for i in range(3)])
