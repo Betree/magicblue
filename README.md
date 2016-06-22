@@ -40,7 +40,7 @@ If you run into problems during devices listing or connect, try to follow this p
 
 ### Using it as an API
 
-    >>> from magicbluelib import MagicBlue
+    >>> from magicbluelib import magicblue
     
     >>> bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
     >>> bulb = MagicBlue(bulb_mac_address)
