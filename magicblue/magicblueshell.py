@@ -8,13 +8,13 @@
 # usage           : python magicblue.py
 # python_version  : 3.4
 # ========================================================================================
+
 import argparse
 import logging
 import os
 import sys
-import time
 import webcolors
-from gattlib import DiscoveryService
+from bluepy.btle import Scanner, DefaultDelegate
 from sys import platform as _platform
 from magicblue.magicbluelib import MagicBlue
 from magicblue import __version__
@@ -24,9 +24,12 @@ logger = logging.getLogger(__name__)
 
 class MagicBlueShell:
     def __init__(self, bluetooth_adapter):
+        # List available commands and their usage. 'con_required' define if we need to be connected to a device for
+        # the command to run
         self.available_cmds = [
             {'cmd': 'help', 'func': self.list_commands, 'params': '', 'help': 'Show this help', 'con_required': False},
             {'cmd': 'list_devices', 'func': self.cmd_list_devices, 'params': '', 'help': 'List Bluetooth LE devices in range', 'con_required': False},
+            {'cmd': 'ls', 'func': self.cmd_list_devices, 'params': '', 'help': 'Alias for list_devices', 'con_required': False},
             {'cmd': 'connect', 'func': self.cmd_connect, 'params': 'mac_address', 'help': 'Connect to light bulb', 'con_required': False},
             {'cmd': 'disconnect', 'func': self.cmd_disconnect, 'params': '', 'help': 'Disconnect from current light bulb', 'con_required': True},
             {'cmd': 'set_color', 'func': self.cmd_set_color, 'params': 'name|hexvalue', 'help': "Change bulb's color", 'con_required': True},
@@ -39,15 +42,19 @@ class MagicBlueShell:
 
     def start_interactive_mode(self):
         print('Magic Blue interactive shell v{}'.format(__version__))
-        print('Type "help" to see what you can do')
+        print('Type "help" for a list of available commands')
 
-        try:
-            str_cmd = ''
-            while str_cmd != 'exit':
-                str_cmd = input('> ')
-                self.exec_cmd(str_cmd)
-        except EOFError:  # Catch CTRL+D
-            self.cmd_exit()
+        str_cmd = ''
+        while str_cmd != 'exit':
+            try:
+                str_cmd = input('> ').strip()
+                if str_cmd:
+                    self.exec_cmd(str_cmd)
+            except (EOFError, KeyboardInterrupt):  # Catch Ctrl+D / Ctrl+C
+                self.cmd_exit()
+                return
+            except Exception as e:
+                logger.error('Unexpected error with command "{}": {}'.format(str_cmd, str(e)))
 
     def exec_cmd(self, str_cmd):
         cmd = self._get_command(str_cmd)
@@ -70,30 +77,21 @@ class MagicBlueShell:
 
     def cmd_list_devices(self, *args):
         try:
-            service = DiscoveryService(self.bluetooth_adapter)
+            scanner = Scanner().withDelegate(ScanDelegate())
+            print('Listing Bluetooth LE devices in range for 5 minutes. Press CTRL+C to stop searching.')
+            print('{: <12} {: <12}'.format('Name', 'Mac address'))
+            print('{: <12} {: <12}'.format('----', '-----------'))
+            scanner.scan(350)
+        except KeyboardInterrupt:
+            print('\n')
         except RuntimeError as e:
             logger.error('Problem with the Bluetooth adapter : {}'.format(e))
             return False
 
-        print('Listing Bluetooth LE devices in range. Press CTRL+C to stop searching.')
-        print('{: <12} {: <12}'.format('Name', 'Mac address'))
-        print('{: <12} {: <12}'.format('----', '-----------'))
-
-        try:
-            while 42:
-                for device_mac, device_name in service.discover(2).items():
-                    print('{: <12} {: <12}'.format(device_name, device_mac))
-                print('---------------')
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print('\n')
-        except RuntimeError as e:
-            logger.error('Error while trying to list bluetooth devices : {}'.format(e))
-
     def cmd_connect(self, *args):
         self._magic_blue = MagicBlue(args[0][0])
         self._magic_blue.connect(self.bluetooth_adapter)
-        logger.info('Connected : {}'.format(self._magic_blue.is_connected()))
+        logger.info('Connected')
 
     def cmd_disconnect(self, *args):
         self._magic_blue.disconnect()
@@ -146,6 +144,15 @@ class MagicBlueShell:
         str_cmd = str_cmd.split()[0]
         return next((item for item in self.available_cmds if item['cmd'] == str_cmd), None)
 
+
+class ScanDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
+
+    def handleDiscovery(self, dev, is_new_device, is_new_data):
+        if is_new_device:
+            dev_name = dev.getValueText(9).split('\x00')[0]
+            print('{: <12} {: <12}'.format(dev_name, dev.addr))
 
 def get_params():
     parser = argparse.ArgumentParser(description='Python tool to control Magic Blue bulbs over Bluetooth')

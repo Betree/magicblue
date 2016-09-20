@@ -10,7 +10,6 @@ setuptools.setup(
     license='MIT',
     packages=['magicblue'],
     install_requires=[
-        'pybluez',
         'bluepy',
         'webcolors'
     ],

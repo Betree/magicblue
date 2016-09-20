@@ -14,23 +14,13 @@ language / platform.
 On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/research/bluetooth) you'll also find capture of bluetooth packets exchanged
 between Android and the bulb (open hci_capture.log with Wireshark).
 
-Tested on Linux only. I'll be happy to get your feedback on other platforms !
+Tested on Linux and Raspberry Pi. I'll be happy to get your feedback on other platforms !
 
 ## Installation
 ### Linux
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
-    sudo apt-get install libbluetooth-dev
     pip install git+https://github.com/Betree/pyMagicBlue.git
-
-### Raspberry Pi
-Gattlib may cause you some troubles if you're trying to set this project up for a Raspberry Pi. Fortunately [Mark Otting](https://github.com/b0tting) proposed a solution for this :
-
-    Pip started installing gattlib, then handed something over to gcc and that crapped out,
-    often "freezing" the Pi. It turns out that whatever it was that gattlib needed compiling
-    ran the pi out of memory. The solution was to increase swap space to 512mb (or 1024mb on
-    a 256mb memory RPI. Also note that Raspbian uses dphys-swapfile). It takes 30 minutes or
-    so but succesfully compiled after that.
 
 ## Usage
 

@@ -48,9 +48,9 @@ class MagicBlue:
 
     def is_connected(self):
         """
-        :return: currently not supported anymore
+        :return: True if connected
         """
-        raise Exception("is_connected is not supported by bluepy library")
+        return self._connection
 
     def set_warm_light(self, intensity=1.0):
         """
