@@ -16,7 +16,7 @@ __all__ = ['MagicBlue']
 logger = logging.getLogger(__name__)
 
 # Handles
-HANDLE_CHANGE_COLOR = 0x0c
+HANDLE_CHANGE_COLOR = 0x0b
 
 # Magics
 MAGIC_CHANGE_COLOR = 0x56
@@ -34,7 +34,7 @@ class MagicBlue:
         :return: True if connection succeed, False otherwise
         """
         try:
-            self._connection = bluepy.btle.Peripheral(self.mac_address, bluepy.btle.ADDR_TYPE_RANDOM, bluetooth_adapter_nr)
+            self._connection = bluepy.btle.Peripheral(self.mac_address, bluepy.btle.ADDR_TYPE_PUBLIC, bluetooth_adapter_nr)
         except RuntimeError as e:
             logger.error('Connection failed : {}'.format(e))
             return False
