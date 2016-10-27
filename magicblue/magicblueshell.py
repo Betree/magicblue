@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class MagicBlueShell:
-    def __init__(self, bluetooth_adapter):
+    def __init__(self, bluetooth_adapter, bulb_version=7):
         # List available commands and their usage. 'con_required' define if we need to be connected to a device for
         # the command to run
         self.available_cmds = [
@@ -38,6 +38,7 @@ class MagicBlueShell:
             {'cmd': 'exit', 'func': self.cmd_exit, 'params': '', 'help': 'Exit the script', 'con_required': False}
         ]
         self.bluetooth_adapter = bluetooth_adapter
+        self._bulb_version = bulb_version
         self._magic_blue = None
 
     def start_interactive_mode(self):
@@ -89,7 +90,7 @@ class MagicBlueShell:
             return False
 
     def cmd_connect(self, *args):
-        self._magic_blue = MagicBlue(args[0][0])
+        self._magic_blue = MagicBlue(args[0][0], self._bulb_version)
         self._magic_blue.connect(self.bluetooth_adapter)
         logger.info('Connected')
 
@@ -160,17 +161,19 @@ def get_params():
     parser.add_argument('-c', '--command', dest='command', help='Command to execute')
     parser.add_argument('-m', '--mac_address', dest='mac_address', help='Device mac address. Must be set if command given in -c needs you to be connected')
     parser.add_argument('-a', '--bluetooth_adapter', default='hci0', dest='bluetooth_adapter', help='Bluetooth adapter name as listed by hciconfig command')
+    parser.add_argument('-b', '--bulb-version', default='7', dest='bulb_version', type=int, help='Bulb version as displayed in the official app')
     return parser.parse_args()
 
 
 def main():
+    params = get_params()
+
     # Exit if not root
     if (_platform == "linux" or _platform == "linux2") and os.geteuid() != 0:
         logger.error("Script must be run as root")
         return 1
 
-    params = get_params()
-    shell = MagicBlueShell(params.bluetooth_adapter)
+    shell = MagicBlueShell(params.bluetooth_adapter, params.bulb_version)
     if params.list_commands:
         shell.list_commands()
     elif params.command:

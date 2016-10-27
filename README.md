@@ -1,5 +1,6 @@
-# magicblue - Python script and library to control Magic Blue bulbs over bluetooth
+![MagicBlue Bulb](https://lut.im/xpaCaUNTaU/k6WRbc71KMMSFIln.jpg)
 
+# MagicBlue - Control your Magic Blue bulbs over bluetooth
 
 The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb on the market : you can get it for as low as ~8€/9$ on sites like
 [Gearbest](http://www.gearbest.com/smart-light-bulb/pp_230349.html). It works pretty good and comes with mobile apps.
@@ -20,7 +21,7 @@ Tested on Linux and Raspberry Pi. I'll be happy to get your feedback on other pl
 ### Linux
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
-    pip install git+https://github.com/Betree/pyMagicBlue.git
+> pip install git+https://github.com/Betree/pyMagicBlue.git
 
 ## Usage
 
@@ -30,6 +31,7 @@ If you run into problems during devices listing or connect, try to follow this p
 
 ### Using it as an API
 
+```
     >>> from magicbluelib import magicblue
     
     >>> bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
@@ -39,6 +41,7 @@ If you run into problems during devices listing or connect, try to follow this p
     >>> bulb.set_random_color()             # Set random
     >>> bulb.turn_off()                     # Turn off the light
     >>> bulb.turn_on()                      # Set white light
+```
 
 ### Using it as a tool
 Script must be run as root.
@@ -48,6 +51,7 @@ You can always specify which bluetooth adapter (default: hci0) you want to use b
 #### Using the interactive shell
 Just launch magicblueshell as root user :
 
+```
     piouffb@Ordinatron-3000:~/workspace/python/pyMagicBlue$ sudo magicblueshell 
     Magic Blue interactive shell v0.1
     Type "help" to see what you can do
@@ -78,11 +82,13 @@ Just launch magicblueshell as root user :
     INFO:__main__:Connected : True
     > exit
     Bye !
+```
 
 #### Passing command as an option
 Script can also be used by command line (for example to include it in custom shell scripts)
 Usage is defined as follow :
 
+```
     usage: magicblueshell [-h] [-l LIST_COMMANDS] [-c COMMAND] [-m MAC_ADDRESS]
     
     optional arguments:
@@ -93,7 +99,13 @@ Usage is defined as follow :
                             Command to execute
       -m MAC_ADDRESS, --mac_address MAC_ADDRESS
                             Device mac address. Must be set if command given in -c needs you to be connected
+      -a BLUETOOTH_ADAPTER, --bluetooth_adapter BLUETOOTH_ADAPTER
+                            Bluetooth adapter name as listed by hciconfig command
+      -b BULB_VERSION, --bulb-version BULB_VERSION
+                            Bulb version as displayed in the official app
+```
+
                             
 So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03", just run :
     
-    sudo magicblueshell -c 'set_color red' -m C7:17:1D:43:39:03
+> sudo magicblueshell -c 'set_color red' -m C7:17:1D:43:39:03
