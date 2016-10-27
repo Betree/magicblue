@@ -21,6 +21,10 @@ Tested on Linux and Raspberry Pi. I'll be happy to get your feedback on other pl
 ### Linux
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
+> pip3 install git+https://github.com/Betree/pyMagicBlue.git
+
+or if Python 3 is your default :
+
 > pip install git+https://github.com/Betree/pyMagicBlue.git
 
 ## Usage
@@ -52,6 +56,7 @@ You can always specify which bluetooth adapter (default: hci0) you want to use b
 Just launch magicblueshell as root user :
 
 ```
+$ sudo magicblueshell
 Magic Blue interactive shell v0.2.2
 Type "help" for a list of available commands
 > help
@@ -81,7 +86,6 @@ INFO:magicblue.magicblueshell:Connected
 > set_color red
 > exit
 Bye !
-
 ```
 
 #### Passing command as an option
