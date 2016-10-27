@@ -32,15 +32,15 @@ If you run into problems during devices listing or connect, try to follow this p
 ### Using it as an API
 
 ```
-    >>> from magicbluelib import magicblue
-    
-    >>> bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
-    >>> bulb = MagicBlue(bulb_mac_address)
-    >>> bulb.connect()
-    >>> bulb.set_color([255, 0, 0])         # Set red
-    >>> bulb.set_random_color()             # Set random
-    >>> bulb.turn_off()                     # Turn off the light
-    >>> bulb.turn_on()                      # Set white light
+>>> from magicbluelib import magicblue
+
+>>> bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
+>>> bulb = MagicBlue(bulb_mac_address)
+>>> bulb.connect()
+>>> bulb.set_color([255, 0, 0])         # Set red
+>>> bulb.set_random_color()             # Set random
+>>> bulb.turn_off()                     # Turn off the light
+>>> bulb.turn_on()                      # Set white light
 ```
 
 ### Using it as a tool
@@ -52,36 +52,36 @@ You can always specify which bluetooth adapter (default: hci0) you want to use b
 Just launch magicblueshell as root user :
 
 ```
-    piouffb@Ordinatron-3000:~/workspace/python/pyMagicBlue$ sudo magicblueshell 
-    Magic Blue interactive shell v0.1
-    Type "help" to see what you can do
-    > help
-     ----------------------------
-    | List of available commands |
-     ----------------------------
-    COMMAND         PARAMETERS               DETAILS
-    -------         ----------               -------
-    help                                     Show this help
-    list_devices                             List Bluetooth LE devices in range
-    connect         mac_address              Connect to light bulb
-    disconnect                               Disconnect from current light bulb
-    set_color       name|hexvalue            Change bulb's color
-    set_warm_light  intensity[0.0-1.0]       Set warm light
-    turn            on|off                   Turn on / off the bulb
-    exit                                     Exit the script
+piouffb@Ordinatron-3000:~/workspace/python/pyMagicBlue$ sudo magicblueshell 
+Magic Blue interactive shell v0.1
+Type "help" to see what you can do
+> help
+ ----------------------------
+| List of available commands |
+ ----------------------------
+COMMAND         PARAMETERS               DETAILS
+-------         ----------               -------
+help                                     Show this help
+list_devices                             List Bluetooth LE devices in range
+connect         mac_address              Connect to light bulb
+disconnect                               Disconnect from current light bulb
+set_color       name|hexvalue            Change bulb's color
+set_warm_light  intensity[0.0-1.0]       Set warm light
+turn            on|off                   Turn on / off the bulb
+exit                                     Exit the script
 
-    > list_devices
-    Listing Bluetooth LE devices in range. Press CTRL+C to stop searching.
-    Name                Mac address 
-    ----                ----------- 
-    LEDBLE-1D433903     C7:17:1D:43:39:03
-    ---------------
-    ^C
-    
-    > connect C7:17:1D:43:39:03
-    INFO:__main__:Connected : True
-    > exit
-    Bye !
+> list_devices
+Listing Bluetooth LE devices in range. Press CTRL+C to stop searching.
+Name                Mac address 
+----                ----------- 
+LEDBLE-1D433903     C7:17:1D:43:39:03
+---------------
+^C
+
+> connect C7:17:1D:43:39:03
+INFO:__main__:Connected : True
+> exit
+Bye !
 ```
 
 #### Passing command as an option
@@ -89,20 +89,20 @@ Script can also be used by command line (for example to include it in custom she
 Usage is defined as follow :
 
 ```
-    usage: magicblueshell [-h] [-l LIST_COMMANDS] [-c COMMAND] [-m MAC_ADDRESS]
-    
-    optional arguments:
-      -h, --help            show this help message and exit
-      -l LIST_COMMANDS, --list_commands LIST_COMMANDS
-                            List available commands
-      -c COMMAND, --command COMMAND
-                            Command to execute
-      -m MAC_ADDRESS, --mac_address MAC_ADDRESS
-                            Device mac address. Must be set if command given in -c needs you to be connected
-      -a BLUETOOTH_ADAPTER, --bluetooth_adapter BLUETOOTH_ADAPTER
-                            Bluetooth adapter name as listed by hciconfig command
-      -b BULB_VERSION, --bulb-version BULB_VERSION
-                            Bulb version as displayed in the official app
+usage: magicblueshell [-h] [-l LIST_COMMANDS] [-c COMMAND] [-m MAC_ADDRESS]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LIST_COMMANDS, --list_commands LIST_COMMANDS
+                        List available commands
+  -c COMMAND, --command COMMAND
+                        Command to execute
+  -m MAC_ADDRESS, --mac_address MAC_ADDRESS
+                        Device mac address. Must be set if command given in -c needs you to be connected
+  -a BLUETOOTH_ADAPTER, --bluetooth_adapter BLUETOOTH_ADAPTER
+                        Bluetooth adapter name as listed by hciconfig command
+  -b BULB_VERSION, --bulb-version BULB_VERSION
+                        Bulb version as displayed in the official app
 ```
 
                             

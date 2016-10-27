@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# ========================================================================================
+# =============================================================================
 # title           : magicblueshell.py
 # description     : Python tool to control Magic Blue bulbs over Bluetooth
 # author          : Benjamin Piouffle
 # date            : 23/11/2015
 # usage           : python magicblue.py
 # python_version  : 3.4
-# ========================================================================================
+# =============================================================================
 
 import argparse
 import logging
@@ -23,20 +23,43 @@ logger = logging.getLogger(__name__)
 
 
 class MagicBlueShell:
+    class Cmd:
+        def __init__(self, cmd_str, func, conn_required, help='', params=None,
+                     aliases=None):
+            self.cmd_str = cmd_str
+            self.func = func
+            self.conn_required = conn_required
+            self.help = help
+            self.params = params or []
+            self.aliases = aliases or []
+
     def __init__(self, bluetooth_adapter, bulb_version=7):
-        # List available commands and their usage. 'con_required' define if we need to be connected to a device for
-        # the command to run
+        # List available commands and their usage. 'con_required' define if
+        # we need to be connected to a device for the command to run
         self.available_cmds = [
-            {'cmd': 'help', 'func': self.list_commands, 'params': '', 'help': 'Show this help', 'con_required': False},
-            {'cmd': 'list_devices', 'func': self.cmd_list_devices, 'params': '', 'help': 'List Bluetooth LE devices in range', 'con_required': False},
-            {'cmd': 'ls', 'func': self.cmd_list_devices, 'params': '', 'help': 'Alias for list_devices', 'con_required': False},
-            {'cmd': 'connect', 'func': self.cmd_connect, 'params': 'mac_address', 'help': 'Connect to light bulb', 'con_required': False},
-            {'cmd': 'disconnect', 'func': self.cmd_disconnect, 'params': '', 'help': 'Disconnect from current light bulb', 'con_required': True},
-            {'cmd': 'set_color', 'func': self.cmd_set_color, 'params': 'name|hexvalue', 'help': "Change bulb's color", 'con_required': True},
-            {'cmd': 'set_warm_light', 'func': self.cmd_set_warm_light, 'params': 'intensity[0.0-1.0]', 'help': "Set warm light", 'con_required': True},
-            {'cmd': 'turn', 'func': self.cmd_turn, 'params': 'on|off', 'help': "Turn on / off the bulb", 'con_required': True},
-            {'cmd': 'exit', 'func': self.cmd_exit, 'params': '', 'help': 'Exit the script', 'con_required': False}
+            MagicBlueShell.Cmd('help', self.list_commands, False,
+                               help='Show this help'),
+            MagicBlueShell.Cmd('list_devices', self.cmd_list_devices, False,
+                               help='List Bluetooth LE devices in range',
+                               aliases=['ls']),
+            MagicBlueShell.Cmd('connect', self.cmd_connect, False,
+                               help='Connect to light bulb',
+                               params=['mac_address']),
+            MagicBlueShell.Cmd('disconnect', self.cmd_disconnect, True,
+                               help='Disconnect from current light bulb'),
+            MagicBlueShell.Cmd('set_color', self.cmd_set_color, True,
+                               help="Change bulb's color",
+                               params=['name or hexadecimal value']),
+            MagicBlueShell.Cmd('set_warm_light', self.cmd_set_warm_light, True,
+                               help='Set warm light',
+                               params=['intensity[0.0-1.0]']),
+            MagicBlueShell.Cmd('turn', self.cmd_turn, True,
+                               help='Turn on / off the bulb',
+                               params=['on|off']),
+            MagicBlueShell.Cmd('exit', self.cmd_exit, False,
+                               help='Exit the script')
         ]
+
         self.bluetooth_adapter = bluetooth_adapter
         self._bulb_version = bulb_version
         self._magic_blue = None
@@ -55,33 +78,37 @@ class MagicBlueShell:
                 self.cmd_exit()
                 return
             except Exception as e:
-                logger.error('Unexpected error with command "{}": {}'.format(str_cmd, str(e)))
+                logger.error('Unexpected error with command "{}": {}'
+                             .format(str_cmd, str(e)))
 
     def exec_cmd(self, str_cmd):
         cmd = self._get_command(str_cmd)
         if cmd is not None:
-            if cmd['con_required'] and not (self._magic_blue and self._magic_blue.is_connected()):
-                logger.error('You must be connected to magic blue bulb to run this command')
-            else:
-                if self._check_args(str_cmd, cmd):
-                    cmd['func'](str_cmd.split()[1:])
+            if cmd.conn_required and not (self._magic_blue and
+                                          self._magic_blue.is_connected()):
+                logger.error('You must be connected to run this command')
+            elif self._check_args(str_cmd, cmd):
+                cmd.func(str_cmd.split()[1:])
         else:
-            logger.error('Command "{}" is not available. Type "help" to see what you can do'.format(str_cmd.split()[0]))
+            logger.error('"{}" is not a valid command.'
+                         'Type "help" to see what you can do'
+                         .format(str_cmd.split()[0]))
 
     def print_usage(self, str_cmd):
         cmd = self._get_command(str_cmd)
         if cmd is not None:
-            print('Usage: {} {}'.format(cmd['cmd'], cmd['params']))
+            print('Usage: {} {}'.format(cmd.cmd_str, ' '.join(cmd.params)))
         else:
-            logger.error('Unknow command {}'.format(str_cmd))
+            logger.error('Unknown command {}'.format(str_cmd))
         return False
 
     def cmd_list_devices(self, *args):
         try:
             scanner = Scanner().withDelegate(ScanDelegate())
-            print('Listing Bluetooth LE devices in range for 5 minutes. Press CTRL+C to stop searching.')
-            print('{: <12} {: <12}'.format('Name', 'Mac address'))
-            print('{: <12} {: <12}'.format('----', '-----------'))
+            print('Listing Bluetooth LE devices in range for 5 minutes.'
+                  'Press CTRL+C to stop searching.')
+            print('{: <30} {: <12}'.format('Name', 'Mac address'))
+            print('{: <30} {: <12}'.format('----', '-----------'))
             scanner.scan(350)
         except KeyboardInterrupt:
             print('\n')
@@ -126,15 +153,19 @@ class MagicBlueShell:
         print(' ----------------------------')
         print('| List of available commands |')
         print(' ----------------------------')
-        print('{: <16}{: <25}{}'.format('COMMAND', 'PARAMETERS', 'DETAILS'))
-        print('{: <16}{: <25}{}'.format('-------', '----------', '-------'))
-        print('\n'.join(['{: <16}{: <25}{}'.format(command['cmd'], command['params'], command['help']) for command in self.available_cmds]))
+        print('{: <16}{: <30}{}'.format('COMMAND', 'PARAMETERS', 'DETAILS'))
+        print('{: <16}{: <30}{}'.format('-------', '----------', '-------'))
+        for command in self.available_cmds:
+            print('{: <16}{: <30}{}'.format(
+                    command.cmd_str, ' '.join(command.params), command.help))
+            for alias in command.aliases:
+                print('{: <16}{: <30}{}'.format(alias, '//', '//'))
 
     def cmd_exit(self, *args):
         print('Bye !')
 
     def _check_args(self, str_cmd, cmd):
-        expected_nb_args = len(cmd['params'].split())
+        expected_nb_args = len(cmd.params)
         args = str_cmd.split()[1:]
         if len(args) != expected_nb_args:
             self.print_usage(str_cmd.split()[0])
@@ -143,7 +174,9 @@ class MagicBlueShell:
 
     def _get_command(self, str_cmd):
         str_cmd = str_cmd.split()[0]
-        return next((item for item in self.available_cmds if item['cmd'] == str_cmd), None)
+        return next((item for item in self.available_cmds
+                     if item.cmd_str == str_cmd or str_cmd in item.aliases
+                     ), None)
 
 
 class ScanDelegate(DefaultDelegate):
@@ -153,15 +186,31 @@ class ScanDelegate(DefaultDelegate):
     def handleDiscovery(self, dev, is_new_device, is_new_data):
         if is_new_device:
             dev_name = dev.getValueText(9).split('\x00')[0]
-            print('{: <12} {: <12}'.format(dev_name, dev.addr))
+            print('{: <30} {: <12}'.format(dev_name, dev.addr))
+
 
 def get_params():
-    parser = argparse.ArgumentParser(description='Python tool to control Magic Blue bulbs over Bluetooth')
-    parser.add_argument('-l', '--list_commands', dest='list_commands', help='List available commands')
-    parser.add_argument('-c', '--command', dest='command', help='Command to execute')
-    parser.add_argument('-m', '--mac_address', dest='mac_address', help='Device mac address. Must be set if command given in -c needs you to be connected')
-    parser.add_argument('-a', '--bluetooth_adapter', default='hci0', dest='bluetooth_adapter', help='Bluetooth adapter name as listed by hciconfig command')
-    parser.add_argument('-b', '--bulb-version', default='7', dest='bulb_version', type=int, help='Bulb version as displayed in the official app')
+    parser = argparse.ArgumentParser(description='Python tool to control Magic'
+                                                 'Blue bulbs over Bluetooth')
+    parser.add_argument('-l', '--list_commands',
+                        dest='list_commands',
+                        help='List available commands')
+    parser.add_argument('-c', '--command',
+                        dest='command',
+                        help='Command to execute')
+    parser.add_argument('-m', '--mac_address',
+                        dest='mac_address',
+                        help='Device mac address. Must be set if command given'
+                             ' in -c needs you to be connected')
+    parser.add_argument('-a', '--bluetooth_adapter',
+                        default='hci0',
+                        dest='bluetooth_adapter',
+                        help='Bluetooth adapter name as listed by hciconfig')
+    parser.add_argument('-b', '--bulb-version',
+                        default='7',
+                        dest='bulb_version',
+                        type=int,
+                        help='Bulb version as displayed in the official app')
     return parser.parse_args()
 
 

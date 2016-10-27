@@ -58,3 +58,6 @@ target/
 
 # Jetbrains
 .idea
+
+# Tox
+.tox
