@@ -21,11 +21,19 @@ Tested on Linux and Raspberry Pi. I'll be happy to get your feedback on other pl
 ### Linux
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
-> pip3 install git+https://github.com/Betree/pyMagicBlue.git
+On most Debian systems :
+```
+sudo apt-get install libglib2.0-dev
+sudo pip3 install bluepy
+sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
+```
 
-or if Python 3 is your default :
-
-> pip install git+https://github.com/Betree/pyMagicBlue.git
+For Fedora :
+```
+sudo dnf install glib2-devel
+sudo pip3 install bluepy
+sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
+```
 
 ## Usage
 
