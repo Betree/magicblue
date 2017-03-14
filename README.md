@@ -12,10 +12,26 @@ I haven't fully retro-engineered the protocol yet so it's not complete but
 [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
 should give you enough details to start working on your own implementation if you need to port this for another
 language / platform.
-On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/research/bluetooth) you'll also find capture of bluetooth packets exchanged
-between Android and the bulb (open hci_capture.log with Wireshark).
+On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/research/bluetooth) you'll also find capture of bluetooth packets exchanged between Android and the bulb (open hci_capture.log with Wireshark).
 
 Tested on Linux and Raspberry Pi. I'll be happy to get your feedback on other platforms !
+
+There are multiple versions and not all of them seems to be working. If you have a different bulb version you can try to sniff bluetooth communications. Reverse-engeeniring information and pull requests are more than welcome 😺
+
+<table>
+  <tr>
+    <th>Bulb Version<br></th>
+    <th>v7</th>
+    <th>v8</th>
+    <th>v9</th>
+  </tr>
+  <tr>
+    <td>Status</td>
+    <td>☑️</td>
+    <td>❎<br></td>
+    <td>☑️</td>
+  </tr>
+</table>
 
 ## Installation
 ### Linux
