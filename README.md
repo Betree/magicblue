@@ -16,7 +16,7 @@ On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/re
 
 Tested on Linux and Raspberry Pi. I'll be happy to get your feedback on other platforms !
 
-There are multiple versions and not all of them seems to be working. If you have a different bulb version you can try to sniff bluetooth communications. Reverse-engeeniring information and pull requests are more than welcome 😺
+There are multiple versions of the bulb, some of them may need development to be compatible with this project. If you have a different bulb version you can try to sniff bluetooth communications. Reverse-engeeniring information and pull requests are more than welcome 😺
 
 <table>
   <tr>
@@ -28,7 +28,7 @@ There are multiple versions and not all of them seems to be working. If you have
   <tr>
     <td>Status</td>
     <td>☑️</td>
-    <td>❎<br></td>
+    <td>☑️<br></td>
     <td>☑️</td>
   </tr>
 </table>
@@ -141,3 +141,10 @@ optional arguments:
 So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03", just run :
     
 > sudo magicblueshell -c 'set_color red' -m C7:17:1D:43:39:03
+
+
+## TODO
+
+- Implement the features listed [in the "functions" section of the wiki](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions)
+- Use [the same wiki info](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions) as a reference to implement turn_on / turn_off in a cleaner way (this may means being able to get the state from the bulb directly)
+- It would be really nice to integrate with [HomeAssistant](home-assistant.io) for a cheap / full open source home light automation
