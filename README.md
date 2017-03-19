@@ -51,6 +51,10 @@ sudo pip3 install bluepy
 sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
 ```
 
+For Raspberry Pi :
+
+Follow the Debian procedure. If it doesn't work (unstable devices listing, commands have no effect) but you're sure that your bulb has a correct version (check the official app for that) then try updating bluez to the last version. You can follow [this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135) for more info.
+
 ## Usage
 
 **Library needs root permissions to use Bluetooth features.**
