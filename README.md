@@ -24,12 +24,14 @@ There are multiple versions of the bulb, some of them may need development to be
     <th>v7</th>
     <th>v8</th>
     <th>v9</th>
+    <th>v10</th>
   </tr>
   <tr>
     <td>Status</td>
     <td>☑️</td>
     <td>☑️<br></td>
     <td>☑️</td>
+    <td>❓</td>
   </tr>
 </table>
 
@@ -64,7 +66,7 @@ If you run into problems during devices listing or connect, try to follow this p
 ### Using it as an API
 
 ```
->>> from magicbluelib import magicblue
+>>> from magicblue import MagicBlue
 
 >>> bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
 >>> bulb = MagicBlue(bulb_mac_address)
