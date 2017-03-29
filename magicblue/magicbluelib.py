@@ -29,7 +29,7 @@ class MagicBlue:
         self.mac_address = mac_address
         self._connection = None
 
-        if version == 9:
+        if version == 9 or version == 10:
             self._addr_type = bluepy.btle.ADDR_TYPE_PUBLIC
             self._handle_change_color = 0x0b
         else:
