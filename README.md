@@ -31,7 +31,7 @@ There are multiple versions of the bulb, some of them may need development to be
     <td>☑️</td>
     <td>☑️<br></td>
     <td>☑️</td>
-    <td>❓</td>
+    <td>☑️</td>
   </tr>
 </table>
 
@@ -80,7 +80,11 @@ If you run into problems during devices listing or connect, try to follow this p
 ### Using it as a tool
 Script must be run as root.
 
-You can always specify which bluetooth adapter (default: hci0) you want to use by specifying it with the -a option. 
+You can always specify which bluetooth adapter (default: hci0) you want to use by specifying it with the -a option.
+
+Also **don't forget to specify your bulb version with `-b` if it's something else than 7**. Example :
+`sudo magicblueshell -b 10` to run with version 10
+
 
 #### Using the interactive shell
 Just launch magicblueshell as root user :
