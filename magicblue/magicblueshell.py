@@ -199,7 +199,8 @@ class ScanDelegate(DefaultDelegate):
     def handleDiscovery(self, dev, is_new_device, is_new_data):
         if is_new_device:
             self.devices.append(dev)
-            dev_name = dev.getValueText(9).split('\x00')[0]
+            raw_name = dev.getValueText(9)
+            dev_name = raw_name.split('\x00')[0] if raw_name else "NO_NAME"
             print('{: <5} {: <30} {: <12}'.format(len(self.devices),
                                                   dev_name, dev.addr))
 
