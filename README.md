@@ -153,8 +153,9 @@ So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03",
 > sudo magicblueshell -c 'set_color red' -m C7:17:1D:43:39:03
 
 
-## TODO
+## TODO (help welcome!)
 
 - Implement the features listed [in the "functions" section of the wiki](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions)
 - Use [the same wiki info](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions) as a reference to implement turn_on / turn_off in a cleaner way (this may means being able to get the state from the bulb directly)
 - It would be really nice to integrate with [HomeAssistant](home-assistant.io) for a cheap / full open source home light automation
+- Create a proper documentation
