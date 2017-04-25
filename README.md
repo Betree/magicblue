@@ -36,6 +36,9 @@ There are multiple versions of the bulb, some of them may need development to be
 </table>
 
 ## Installation
+### HomeAssistant
+If you want to use this project with [HomeAssistant](https://home-assistant.io/) you'll need to install `magicblue` as described below then use the component available here : https://github.com/xiaohuim/homeassistant-magicblue
+
 ### Linux
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
