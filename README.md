@@ -42,23 +42,29 @@ If you want to use this project with [HomeAssistant](https://home-assistant.io/)
 ### Linux
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
-On most Debian systems :
+* On most Debian systems
+
 ```
 sudo apt-get install libglib2.0-dev
 sudo pip3 install bluepy
 sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
 ```
 
-For Fedora :
+* Fedora
+
 ```
 sudo dnf install glib2-devel
 sudo pip3 install bluepy
 sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
 ```
 
-For Raspberry Pi :
+* Raspberry Pi
 
 Follow the Debian procedure. If it doesn't work (unstable devices listing, commands have no effect) but you're sure that your bulb has a correct version (check the official app for that) then try updating bluez to the last version. You can follow [this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135) for more info.
+
+⚠️ If you get the error `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'` or similar :
+This is a [known bug](https://github.com/IanHarvey/bluepy/issues/158) in bluepy that sometimes doesn't get compiled when installed from Pypi on Raspberry Pi. You can fix it by compiling the helper yourself :
+Go to the lib folder (usually `/usr/local/lib/python3.4/dist-packages/bluepy-1.0.5-py3.4.egg/bluepy/` but could be different, especially if you're using a virtual env) and run `sudo make` (`make` should be enought for a virtual env)
 
 ## Usage
 
@@ -158,7 +164,6 @@ So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03",
 
 ## TODO (help welcome!)
 
-- Implement the features listed [in the "functions" section of the wiki](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions)
-- Use [the same wiki info](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions) as a reference to implement turn_on / turn_off in a cleaner way (this may means being able to get the state from the bulb directly)
-- It would be really nice to integrate with [HomeAssistant](home-assistant.io) for a cheap / full open source home light automation
+- [Add support for functions (strobe, colors crossfade...etc)](https://github.com/Betree/magicblue/issues/19)
+- Use the [wiki info](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions) as a reference to implement turn_on / turn_off in a cleaner way (this may means being able to get the state from the bulb directly)
 - Create a proper documentation
