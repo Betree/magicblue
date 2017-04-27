@@ -13,6 +13,7 @@ from datetime import datetime, date, time
 
 import pygatt
 from pygatt.util import uuid16_to_uuid
+from pygatt.exceptions import BLEError, NotConnectedError
 
 
 __all__ = ['MagicBlue']
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 UUID_CHARACTERISTIC_RECV = uuid16_to_uuid(0xffe4)
 UUID_CHARACTERISTIC_WRITE = uuid16_to_uuid(0xffe9)
+UUID_CHARACTERISTIC_DEVICE_NAME = uuid16_to_uuid(0x2a00)
 
 
 def _figure_addr_type(mac_address=None, version=None):
@@ -37,7 +39,6 @@ def _figure_addr_type(mac_address=None, version=None):
             return pygatt.BLEAddressType.public
 
     return pygatt.BLEAddressType.random
-
 
 
 class MagicBlue:
@@ -89,17 +90,39 @@ class MagicBlue:
         """
         Disconnect from device
         """
-        self._device.disconnect()
+        try:
+            self._device.disconnect()
+        except BLEError:
+            pass
         self._device = None
 
-        self._adapter.stop()
+        try:
+            self._adapter.stop()
+        except BLEError:
+            pass
         self._adapter = None
 
     def is_connected(self):
         """
         :return: True if connected
         """
-        return self._device is not None
+        return self._device is not None  # and self.test_connection()
+
+    def test_connection(self):
+        """
+        Test if the connection is still alive
+        """
+        if not self.is_connected():
+            return False
+
+        # send test message, read bulb name
+        try:
+            self.get_device_name()
+        except NotConnectedError:
+            self.disconnect()
+            return False
+
+        return True
 
     def get_device_name(self):
         """
