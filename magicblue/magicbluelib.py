@@ -101,6 +101,14 @@ class MagicBlue:
         """
         return self._device is not None
 
+    def get_device_name(self):
+        """
+        :return: Device name
+        """
+        # somehow, we have to read the handle and cannot read the UUID
+        handle = self._device.get_handle(UUID_CHARACTERISTIC_DEVICE_NAME)
+        return self._device.char_read_handle(handle)
+
     def set_warm_light(self, intensity=1.0):
         """
         Equivalent of what they call the "Warm light" property in the app that
