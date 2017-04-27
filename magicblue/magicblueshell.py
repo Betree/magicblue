@@ -61,6 +61,9 @@ class MagicBlueShell:
             MagicBlueShell.Cmd('turn', self.cmd_turn, True,
                                help='Turn on / off the bulb',
                                params=['on|off']),
+            MagicBlueShell.Cmd('read', self.cmd_read, True,
+                               help='Read device_info/datetime from the bulb',
+                               params=['device_info|date_time']),
             MagicBlueShell.Cmd('exit', self.cmd_exit, False,
                                help='Exit the script')
         ]
@@ -156,6 +159,14 @@ class MagicBlueShell:
             self._magic_blue.turn_on()
         else:
             self._magic_blue.turn_off()
+
+    def cmd_read(self, *args):
+        if args[0][0] == 'device_info':
+            device_info = self._magic_blue.request_device_info()
+            logger.info('Received device_info: {}'.format(device_info))
+        elif args[0][0] == 'date_time':
+            datetime_ = self._magic_blue.request_date_time()
+            logger.info('Received datetime: {}'.format(datetime_))
 
     def cmd_set_color(self, *args):
         color = args[0][0]

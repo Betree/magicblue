@@ -9,8 +9,10 @@
 # =============================================================================
 import logging
 import random
+from datetime import datetime, date, time
 
 import pygatt
+from pygatt.util import uuid16_to_uuid
 
 
 __all__ = ['MagicBlue']
@@ -18,27 +20,47 @@ __all__ = ['MagicBlue']
 
 logger = logging.getLogger(__name__)
 
-# Magics
-MAGIC_CHANGE_COLOR = 0x56
+
+UUID_CHARACTERISTIC_RECV = uuid16_to_uuid(0xffe4)
+UUID_CHARACTERISTIC_WRITE = uuid16_to_uuid(0xffe9)
+
+
+def _figure_addr_type(mac_address=None, version=None):
+    # prefer version
+    if version == 9 or version == 10:
+        return pygatt.BLEAddressType.public
+
+    # try using mac_address
+    if mac_address is not None:
+        mac_address_num = int(mac_address.replace(':', ''), 16)
+        if mac_address_num & 0xF00000000000 == 0xF00000000000:
+            return pygatt.BLEAddressType.public
+
+    return pygatt.BLEAddressType.random
+
 
 
 class MagicBlue:
+    """
+    Class to interface with Magic Blue light
+    """
+
     def __init__(self, mac_address, version=7):
         """
         :param mac_address: device MAC address as a string
         :param version: bulb version as displayed in official app (integer)
         :return:
         """
-        self.mac_address = mac_address
         self._adapter = None
         self._device = None
 
-        if version == 9 or version == 10:
-            self._addr_type = pygatt.BLEAddressType.public
-            self._handle_change_color = 0x0b
-        else:
-            self._addr_type = pygatt.BLEAddressType.random
-            self._handle_change_color = 0x0c
+        self.mac_address = mac_address
+
+        self._device_info = {}
+        self._date_time = None
+
+        self._adapter = None
+        self._addr_type = _figure_addr_type(mac_address, version)
 
     def connect(self, bluetooth_adapter_nr=0):
         """
@@ -54,10 +76,13 @@ class MagicBlue:
             self._adapter.start()
 
             self._device = self._adapter.connect(
-                    self.mac_address, address_type=self._addr_type)
+                self.mac_address, address_type=self._addr_type)
+            self._device.subscribe(
+                UUID_CHARACTERISTIC_RECV, self._notification_handler)
         except RuntimeError as e:
             logger.error('Connection failed : {}'.format(e))
             return False
+
         return True
 
     def disconnect(self):
@@ -79,23 +104,21 @@ class MagicBlue:
     def set_warm_light(self, intensity=1.0):
         """
         Equivalent of what they call the "Warm light" property in the app that
-        is a strong wight / yellow color, stronger that any value you may get
+        is a strong white / yellow color, stronger that any value you may get
         by setting rgb color.
         :param intensity: the intensity between 0.0 and 1.0
-
         """
-        msg = bytearray([MAGIC_CHANGE_COLOR, 0, 0, 0,
-                         int(intensity * 255), 0x0f, 0xaa, 0x09])
-        self._device.char_write_handle(self._handle_change_color, msg)
+        brightness = int(intensity * 255)
+        msg = Protocol.encode_set_brightness(brightness)
+        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
 
     def set_color(self, rgb_color):
         """
         Change bulb's color
         :param rgb_color: color as a list of 3 values between 0 and 255
         """
-        msg = bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color) +
-                        [0x00, 0xf0, 0xaa])
-        self._device.char_write_handle(self._handle_change_color, msg)
+        msg = Protocol.encode_set_rgb(*rgb_color)
+        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
 
     def set_random_color(self):
         """
@@ -107,8 +130,8 @@ class MagicBlue:
         """
         Turn off the light
         """
-        msg = bytearray([0xCC, 0x24, 0x33])
-        self._device.char_write_handle(self._handle_change_color, msg)
+        msg = Protocol.encode_turn_off()
+        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
 
     def turn_on(self, brightness=None):
         """
@@ -116,8 +139,135 @@ class MagicBlue:
         :param brightness:  a float value between 0.0 and 1.0 defining the
                             brightness
         """
-        if brightness is None:
-            msg = bytearray([0xCC, 0x23, 0x33])
-            self._device.char_write_handle(self._handle_change_color, msg)
-        else:
-            self.set_color([int(255 * brightness) for i in range(3)])
+        msg = Protocol.encode_turn_on()
+        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
+
+        if brightness is not None:
+            self.set_warm_light(brightness)
+
+    def request_device_info(self):
+        """
+        Retrieve device info
+        """
+        msg = Protocol.encode_request_device_info()
+        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg, True)
+        return self._device_info
+
+    def set_date_time(self, datetime_):
+        """
+        Set date/time in bulb
+        :param datetime_:  datetime to set
+        """
+        msg = Protocol.encode_set_date_time(datetime_)
+        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
+
+    def request_date_time(self):
+        """
+        Retrieve date/time from bulb
+        """
+        msg = Protocol.encode_request_date_time()
+        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg, True)
+        return self._date_time
+
+    def _notification_handler(self, handle, buffer):
+        if len(buffer) >= 11 and buffer[0] == 0x66 and buffer[11] == 0x99:
+            self._device_info = Protocol.decode_device_info(buffer)
+
+        if len(buffer) >= 10 and buffer[0] == 0x13 and buffer[10] == 0x31:
+            self._date_time = Protocol.decode_date_time(buffer)
+
+
+class Protocol:
+    """
+    Protocol encoding/decoding for the bulb
+    """
+
+    @staticmethod
+    def encode_set_brightness(brightness):
+        """
+        Construct a message to set brightness
+        """
+        return bytearray([0x56, 0x00, 0x00, 0x00, brightness, 0x0F, 0xAA])
+
+    @staticmethod
+    def encode_set_rgb(red, green, blue):
+        """
+        Construct a message to set RGB
+        """
+        return bytearray([0x56, red, green, blue, 0x00, 0xF0, 0xAA])
+
+    @staticmethod
+    def encode_turn_on():
+        """
+        Construct a message to turn on
+        """
+        return bytearray([0xCC, 0x23, 0x33])
+
+    @staticmethod
+    def encode_turn_off():
+        """
+        Construct a message to turn off
+        """
+        return bytearray([0xCC, 0x24, 0x33])
+
+    @staticmethod
+    def encode_set_date_time(datetime_):
+        """
+        Construct a message to set date/time
+        """
+        # python: 1-7 --> monday-sunday
+        # bulb:   1-7 --> sunday-saturday
+        day_of_week = (datetime_.isoweekday() + 1) % 7 or 7
+        year = datetime.year - 2000
+        return bytearray([0x10, 0x14,
+                          year, datetime_.month, datetime_.day,
+                          datetime_.hour, datetime_.minute, datetime_.second,
+                          day_of_week,
+                          0x00, 0x01])
+
+    @staticmethod
+    def encode_request_device_info():
+        """
+        Construct a message to request device info
+        """
+        return bytearray([0xEF, 0x01, 0x77])
+
+    @staticmethod
+    def encode_request_date_time():
+        """
+        Construct a message to request date/time
+        """
+        return bytearray([0x12, 0x1A, 0x1B, 0x21])
+
+    @staticmethod
+    def decode_device_info(buffer):
+        """
+        Decode a message with device info
+        """
+        info = {
+            'device_type': buffer[1],
+            'power_on':    buffer[2] == 0x23,
+            'r':           buffer[6],
+            'g':           buffer[7],
+            'b':           buffer[8],
+            'brightness':  buffer[9],
+            'version':     buffer[10],
+        }
+        return info
+
+    @staticmethod
+    def decode_date_time(buffer):
+        """
+        Decode a message with the date/time
+        """
+        year = buffer[2] + 2000
+        month = buffer[3]
+        day = buffer[4]
+        date_ = date(year, month, day)
+
+        hour = buffer[5]
+        minute = buffer[6]
+        second = buffer[7]
+        time_ = time(hour, minute, second)
+
+        return datetime.combine(date_, time_)
