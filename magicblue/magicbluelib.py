@@ -9,9 +9,12 @@
 # =============================================================================
 import logging
 import random
-import bluepy.btle
+
+import pygatt
+
 
 __all__ = ['MagicBlue']
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +30,14 @@ class MagicBlue:
         :return:
         """
         self.mac_address = mac_address
-        self._connection = None
+        self._adapter = None
+        self._device = None
 
         if version == 9 or version == 10:
-            self._addr_type = bluepy.btle.ADDR_TYPE_PUBLIC
+            self._addr_type = pygatt.BLEAddressType.public
             self._handle_change_color = 0x0b
         else:
-            self._addr_type = bluepy.btle.ADDR_TYPE_RANDOM
+            self._addr_type = pygatt.BLEAddressType.random
             self._handle_change_color = 0x0c
 
     def connect(self, bluetooth_adapter_nr=0):
@@ -43,10 +47,14 @@ class MagicBlue:
                 "hciconfig" command. Default : 0 for (hci0)
         :return: True if connection succeed, False otherwise
         """
+        hci_device = 'hci{}'.format(bluetooth_adapter_nr)
+
         try:
-            self._connection = bluepy.btle.Peripheral(self.mac_address,
-                                                      self._addr_type,
-                                                      bluetooth_adapter_nr)
+            self._adapter = pygatt.GATTToolBackend(hci_device=hci_device)
+            self._adapter.start()
+
+            self._device = self._adapter.connect(
+                    self.mac_address, address_type=self._addr_type)
         except RuntimeError as e:
             logger.error('Connection failed : {}'.format(e))
             return False
@@ -56,13 +64,17 @@ class MagicBlue:
         """
         Disconnect from device
         """
-        self._connection.disconnect()
+        self._device.disconnect()
+        self._device = None
+
+        self._adapter.stop()
+        self._adapter = None
 
     def is_connected(self):
         """
         :return: True if connected
         """
-        return self._connection
+        return self._device is not None
 
     def set_warm_light(self, intensity=1.0):
         """
@@ -72,18 +84,18 @@ class MagicBlue:
         :param intensity: the intensity between 0.0 and 1.0
 
         """
-        msg = bytes(bytearray([MAGIC_CHANGE_COLOR, 0, 0, 0,
-                               int(intensity * 255), 0x0f, 0xaa, 0x09]))
-        self._connection.writeCharacteristic(self._handle_change_color, msg)
+        msg = bytearray([MAGIC_CHANGE_COLOR, 0, 0, 0,
+                         int(intensity * 255), 0x0f, 0xaa, 0x09])
+        self._device.char_write_handle(self._handle_change_color, msg)
 
     def set_color(self, rgb_color):
         """
         Change bulb's color
         :param rgb_color: color as a list of 3 values between 0 and 255
         """
-        msg = bytes(bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color) +
-                              [0x00, 0xf0, 0xaa]))
-        self._connection.writeCharacteristic(self._handle_change_color, msg)
+        msg = bytearray([MAGIC_CHANGE_COLOR] + list(rgb_color) +
+                        [0x00, 0xf0, 0xaa])
+        self._device.char_write_handle(self._handle_change_color, msg)
 
     def set_random_color(self):
         """
@@ -95,8 +107,8 @@ class MagicBlue:
         """
         Turn off the light
         """
-        self._connection.writeCharacteristic(self._handle_change_color,
-                                             b'\xCC\x24\x33')
+        msg = bytearray([0xCC, 0x24, 0x33])
+        self._device.char_write_handle(self._handle_change_color, msg)
 
     def turn_on(self, brightness=None):
         """
@@ -105,7 +117,7 @@ class MagicBlue:
                             brightness
         """
         if brightness is None:
-            self._connection.writeCharacteristic(self._handle_change_color,
-                                                 b'\xCC\x23\x33')
+            msg = bytearray([0xCC, 0x23, 0x33])
+            self._device.char_write_handle(self._handle_change_color, msg)
         else:
             self.set_color([int(255 * brightness) for i in range(3)])

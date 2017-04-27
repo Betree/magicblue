@@ -13,13 +13,18 @@ import argparse
 import logging
 import os
 import sys
-import webcolors
-from bluepy.btle import Scanner, DefaultDelegate
 from sys import platform as _platform
+
+import pygatt
+import webcolors
 from magicblue.magicbluelib import MagicBlue
 from magicblue import __version__
 
+
 logger = logging.getLogger(__name__)
+
+# make pygatt logging less noisy
+logging.getLogger('pygatt').setLevel(logging.WARNING)
 
 
 class MagicBlueShell:
@@ -63,7 +68,7 @@ class MagicBlueShell:
         self.bluetooth_adapter = bluetooth_adapter
         self._bulb_version = bulb_version
         self._magic_blue = None
-        self.last_scan = None
+        self._devices = []
 
     def start_interactive_mode(self):
         print('Magic Blue interactive shell v{}'.format(__version__))
@@ -104,32 +109,41 @@ class MagicBlueShell:
         return False
 
     def cmd_list_devices(self, *args):
+        adapter = pygatt.GATTToolBackend()
+        adapter.start()
+
+        scan_time = 10
         try:
-            self.last_scan = ScanDelegate()
-            scanner = Scanner().withDelegate(self.last_scan)
-            print('Listing Bluetooth LE devices in range for 5 minutes.'
-                  'Press CTRL+C to stop searching.')
+            print('Listing Bluetooth LE devices in range for {} seconds. '
+                  'Press CTRL+C to abort searching.'.format(scan_time))
             print('{: <5} {: <30} {: <12}'.format('ID', 'Name', 'Mac address'))
             print('{: <5} {: <30} {: <12}'.format('--', '----', '-----------'))
-            scanner.scan(350)
+
+            # report found devices
+            self._devices = adapter.scan(timeout=scan_time)
+            for idx, device in enumerate(self._devices):
+                print('{: <5} {: <30} {: <12}'.format(
+                    idx, device['name'], device['address']))
         except KeyboardInterrupt:
-            print('\n')
+            print('Aborted')
         except RuntimeError as e:
             logger.error('Problem with the Bluetooth adapter : {}'.format(e))
             return False
+        finally:
+            adapter.stop()
 
     def cmd_connect(self, *args):
         # Use can enter either a mac address or the device ID from the list
-        if len(args[0][0]) < 4 and self.last_scan:
+        if len(args[0][0]) < 4 and self._devices:
             try:
-                dev_id = int(args[0][0]) - 1
-                mac_address = self.last_scan.devices[dev_id].addr
+                dev_id = int(args[0][0])
+                mac_address = self._devices[dev_id]['address']
             except Exception:
                 logger.error('Bad ID / MAC address : {}'.format(args[0][0]))
                 return False
         else:
             mac_address = args[0][0]
-        self._magic_blue = MagicBlue(mac_address, self._bulb_version)
+        self._magic_blue = MagicBlue(mac_address, version=self._bulb_version)
         self._magic_blue.connect(self.bluetooth_adapter)
         logger.info('Connected')
 
@@ -189,20 +203,6 @@ class MagicBlueShell:
         return next((item for item in self.available_cmds
                      if item.cmd_str == str_cmd or str_cmd in item.aliases
                      ), None)
-
-
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
-        self.devices = []
-
-    def handleDiscovery(self, dev, is_new_device, is_new_data):
-        if is_new_device:
-            self.devices.append(dev)
-            raw_name = dev.getValueText(9)
-            dev_name = raw_name.split('\x00')[0] if raw_name else "NO_NAME"
-            print('{: <5} {: <30} {: <12}'.format(len(self.devices),
-                                                  dev_name, dev.addr))
 
 
 def get_params():
