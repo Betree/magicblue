@@ -7,6 +7,7 @@
 # date            : 23/11/2015
 # python_version  : 3.4
 # =============================================================================
+import functools
 import logging
 import random
 from datetime import datetime, date, time
@@ -25,6 +26,20 @@ logger = logging.getLogger(__name__)
 UUID_CHARACTERISTIC_RECV = uuid16_to_uuid(0xffe4)
 UUID_CHARACTERISTIC_WRITE = uuid16_to_uuid(0xffe9)
 UUID_CHARACTERISTIC_DEVICE_NAME = uuid16_to_uuid(0x2a00)
+
+
+def connection_required(func):
+    """Raise an exception before calling the actual function if the device is
+    not connection.
+    """
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if not self._device:
+            raise NotConnectedError()
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 def _figure_addr_type(mac_address=None, version=None):
@@ -56,12 +71,10 @@ class MagicBlue:
         self._device = None
 
         self.mac_address = mac_address
+        self.version = version
 
         self._device_info = {}
         self._date_time = None
-
-        self._adapter = None
-        self._addr_type = _figure_addr_type(mac_address, version)
 
     def connect(self, bluetooth_adapter_nr=0):
         """
@@ -71,13 +84,14 @@ class MagicBlue:
         :return: True if connection succeed, False otherwise
         """
         hci_device = 'hci{}'.format(bluetooth_adapter_nr)
+        addr_type = _figure_addr_type(self.mac_address, self.version)
 
         try:
             self._adapter = pygatt.GATTToolBackend(hci_device=hci_device)
             self._adapter.start()
 
             self._device = self._adapter.connect(
-                self.mac_address, address_type=self._addr_type)
+                self.mac_address, address_type=addr_type)
             self._device.subscribe(
                 UUID_CHARACTERISTIC_RECV, self._notification_handler)
         except RuntimeError as e:
@@ -124,6 +138,7 @@ class MagicBlue:
 
         return True
 
+    @connection_required
     def get_device_name(self):
         """
         :return: Device name
@@ -132,6 +147,7 @@ class MagicBlue:
         handle = self._device.get_handle(UUID_CHARACTERISTIC_DEVICE_NAME)
         return self._device.char_read_handle(handle)
 
+    @connection_required
     def set_warm_light(self, intensity=1.0):
         """
         Equivalent of what they call the "Warm light" property in the app that
@@ -143,6 +159,7 @@ class MagicBlue:
         msg = Protocol.encode_set_brightness(brightness)
         self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
 
+    @connection_required
     def set_color(self, rgb_color):
         """
         Change bulb's color
@@ -151,12 +168,14 @@ class MagicBlue:
         msg = Protocol.encode_set_rgb(*rgb_color)
         self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
 
+    @connection_required
     def set_random_color(self):
         """
         Change bulb's color with a random color
         """
         self.set_color([random.randint(1, 255) for i in range(3)])
 
+    @connection_required
     def turn_off(self):
         """
         Turn off the light
@@ -164,6 +183,7 @@ class MagicBlue:
         msg = Protocol.encode_turn_off()
         self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
 
+    @connection_required
     def turn_on(self, brightness=None):
         """
         Set white color on the light
@@ -176,6 +196,7 @@ class MagicBlue:
         if brightness is not None:
             self.set_warm_light(brightness)
 
+    @connection_required
     def request_device_info(self):
         """
         Retrieve device info
@@ -184,6 +205,7 @@ class MagicBlue:
         self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg, True)
         return self._device_info
 
+    @connection_required
     def set_date_time(self, datetime_):
         """
         Set date/time in bulb
@@ -192,6 +214,7 @@ class MagicBlue:
         msg = Protocol.encode_set_date_time(datetime_)
         self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
 
+    @connection_required
     def request_date_time(self):
         """
         Retrieve date/time from bulb
@@ -201,11 +224,16 @@ class MagicBlue:
         return self._date_time
 
     def _notification_handler(self, handle, buffer):
+        logger.debug("Got notification, handle: {}, buffer: {}".format(handle, buffer))
+
         if len(buffer) >= 11 and buffer[0] == 0x66 and buffer[11] == 0x99:
             self._device_info = Protocol.decode_device_info(buffer)
 
         if len(buffer) >= 10 and buffer[0] == 0x13 and buffer[10] == 0x31:
             self._date_time = Protocol.decode_date_time(buffer)
+
+    def __str__(self):
+        return "<MagicBlue({}, {})>".format(self.mac_address, self.version)
 
 
 class Protocol:
