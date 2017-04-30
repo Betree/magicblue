@@ -15,16 +15,13 @@ import os
 import sys
 from sys import platform as _platform
 
-import pygatt
 import webcolors
+from bluepy.btle import Scanner, DefaultDelegate
 from magicblue.magicbluelib import MagicBlue
 from magicblue import __version__
 
 
 logger = logging.getLogger(__name__)
-
-# make pygatt logging less noisy
-logging.getLogger('pygatt').setLevel(logging.WARNING)
 
 
 class MagicBlueShell:
@@ -63,7 +60,7 @@ class MagicBlueShell:
                                params=['on|off']),
             MagicBlueShell.Cmd('read', self.cmd_read, True,
                                help='Read device_info/datetime from the bulb',
-                               params=['device_info|date_time']),
+                               params=['name|device_info|date_time']),
             MagicBlueShell.Cmd('exit', self.cmd_exit, False,
                                help='Exit the script')
         ]
@@ -112,41 +109,39 @@ class MagicBlueShell:
         return False
 
     def cmd_list_devices(self, *args):
-        adapter = pygatt.GATTToolBackend()
-        adapter.start()
-
-        scan_time = 10
+        scan_time = 300
         try:
+            self.last_scan = ScanDelegate()
+            scanner = Scanner().withDelegate(self.last_scan)
+
             print('Listing Bluetooth LE devices in range for {} seconds. '
                   'Press CTRL+C to abort searching.'.format(scan_time))
             print('{: <5} {: <30} {: <12}'.format('ID', 'Name', 'Mac address'))
             print('{: <5} {: <30} {: <12}'.format('--', '----', '-----------'))
 
-            # report found devices
-            self._devices = adapter.scan(timeout=scan_time)
-            for idx, device in enumerate(self._devices):
-                print('{: <5} {: <30} {: <12}'.format(
-                    idx, device['name'], device['address']))
+            scanner.scan(scan_time)
         except KeyboardInterrupt:
-            print('Aborted')
+            print('\n')
         except RuntimeError as e:
             logger.error('Problem with the Bluetooth adapter : {}'.format(e))
             return False
-        finally:
-            adapter.stop()
 
     def cmd_connect(self, *args):
         # Use can enter either a mac address or the device ID from the list
-        if len(args[0][0]) < 4 and self._devices:
+        if len(args[0][0]) < 4 and self.last_scan:
             try:
-                dev_id = int(args[0][0])
-                mac_address = self._devices[dev_id]['address']
+                dev_id = int(args[0][0]) - 1
+                entry = self.last_scan.devices[dev_id]
+                mac_address = entry.addr
+                addr_type = entry.addrType
             except Exception:
                 logger.error('Bad ID / MAC address : {}'.format(args[0][0]))
                 return False
         else:
             mac_address = args[0][0]
-        self._magic_blue = MagicBlue(mac_address, version=self._bulb_version)
+        self._magic_blue = MagicBlue(mac_address,
+                                     version=self._bulb_version,
+                                     addr_type=addr_type)
         self._magic_blue.connect(self.bluetooth_adapter)
         logger.info('Connected')
 
@@ -161,11 +156,14 @@ class MagicBlueShell:
             self._magic_blue.turn_off()
 
     def cmd_read(self, *args):
-        if args[0][0] == 'device_info':
-            device_info = self._magic_blue.request_device_info()
+        if args[0][0] == 'name':
+            name = self._magic_blue.get_device_name()
+            logger.info('Received name: {}'.format(name))
+        elif args[0][0] == 'device_info':
+            device_info = self._magic_blue.get_device_info()
             logger.info('Received device_info: {}'.format(device_info))
         elif args[0][0] == 'date_time':
-            datetime_ = self._magic_blue.request_date_time()
+            datetime_ = self._magic_blue.get_date_time()
             logger.info('Received datetime: {}'.format(datetime_))
 
     def cmd_set_color(self, *args):
@@ -214,6 +212,21 @@ class MagicBlueShell:
         return next((item for item in self.available_cmds
                      if item.cmd_str == str_cmd or str_cmd in item.aliases
                      ), None)
+
+
+class ScanDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
+        self.devices = []
+
+    def handleDiscovery(self, dev, is_new_device, is_new_data):
+        if is_new_device:
+            self.devices.append(dev)
+            raw_name = dev.getValueText(9)
+            dev_name = raw_name.split('\x00')[0] if raw_name else "NO_NAME"
+            print('{: <5} {: <30} {: <12}'.format(len(self.devices),
+                                                  dev_name,
+                                                  dev.addr))
 
 
 def get_params():

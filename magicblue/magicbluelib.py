@@ -12,9 +12,7 @@ import logging
 import random
 from datetime import datetime, date, time
 
-import pygatt
-from pygatt.util import uuid16_to_uuid
-from pygatt.exceptions import BLEError, NotConnectedError
+from bluepy import btle
 
 
 __all__ = ['MagicBlue']
@@ -23,9 +21,9 @@ __all__ = ['MagicBlue']
 logger = logging.getLogger(__name__)
 
 
-UUID_CHARACTERISTIC_RECV = uuid16_to_uuid(0xffe4)
-UUID_CHARACTERISTIC_WRITE = uuid16_to_uuid(0xffe9)
-UUID_CHARACTERISTIC_DEVICE_NAME = uuid16_to_uuid(0x2a00)
+UUID_CHARACTERISTIC_RECV = btle.UUID('ffe4')
+UUID_CHARACTERISTIC_WRITE = btle.UUID('ffe9')
+UUID_CHARACTERISTIC_DEVICE_NAME = btle.UUID('2a00')
 
 
 def connection_required(func):
@@ -34,26 +32,30 @@ def connection_required(func):
     """
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        if not self._device:
-            raise NotConnectedError()
+        if not self._connection:
+            raise Exception("Not connected")
 
         return func(self, *args, **kwargs)
 
     return wrapper
 
 
-def _figure_addr_type(mac_address=None, version=None):
+def _figure_addr_type(mac_address=None, version=None, addr_type=None):
+    # addr_type rules all
+    if addr_type is not None:
+        return addr_type
+
     # prefer version
     if version == 9 or version == 10:
-        return pygatt.BLEAddressType.public
+        return btle.ADDR_TYPE_PUBLIC
 
     # try using mac_address
     if mac_address is not None:
         mac_address_num = int(mac_address.replace(':', ''), 16)
         if mac_address_num & 0xF00000000000 == 0xF00000000000:
-            return pygatt.BLEAddressType.public
+            return btle.ADDR_TYPE_PUBLIC
 
-    return pygatt.BLEAddressType.random
+    return btle.ADDR_TYPE_RANDOM
 
 
 class MagicBlue:
@@ -61,17 +63,17 @@ class MagicBlue:
     Class to interface with Magic Blue light
     """
 
-    def __init__(self, mac_address, version=7):
+    def __init__(self, mac_address, version=7, addr_type=None):
         """
         :param mac_address: device MAC address as a string
         :param version: bulb version as displayed in official app (integer)
         :return:
         """
-        self._adapter = None
-        self._device = None
+        self._connection = None
 
         self.mac_address = mac_address
         self.version = version
+        self._addr_type = _figure_addr_type(mac_address, version, addr_type)
 
         self._device_info = {}
         self._date_time = None
@@ -83,17 +85,15 @@ class MagicBlue:
                 "hciconfig" command. Default : 0 for (hci0)
         :return: True if connection succeed, False otherwise
         """
-        hci_device = 'hci{}'.format(bluetooth_adapter_nr)
+        logger.debug("Connecting...")
+
         addr_type = _figure_addr_type(self.mac_address, self.version)
 
         try:
-            self._adapter = pygatt.GATTToolBackend(hci_device=hci_device)
-            self._adapter.start()
-
-            self._device = self._adapter.connect(
-                self.mac_address, address_type=addr_type)
-            self._device.subscribe(
-                UUID_CHARACTERISTIC_RECV, self._notification_handler)
+            connection = btle.Peripheral(self.mac_address, addr_type,
+                                         bluetooth_adapter_nr)
+            self._connection = connection.withDelegate(self)
+            self._subscribe_to_recv_characteristic()
         except RuntimeError as e:
             logger.error('Connection failed : {}'.format(e))
             return False
@@ -104,23 +104,20 @@ class MagicBlue:
         """
         Disconnect from device
         """
-        try:
-            self._device.disconnect()
-        except BLEError:
-            pass
-        self._device = None
+        logger.debug("Disconnecting...")
 
         try:
-            self._adapter.stop()
-        except BLEError:
+            self._connection.disconnect()
+        except btle.BTLEException:
             pass
-        self._adapter = None
+
+        self._connection = None
 
     def is_connected(self):
         """
         :return: True if connected
         """
-        return self._device is not None  # and self.test_connection()
+        return self._connection is not None  # and self.test_connection()
 
     def test_connection(self):
         """
@@ -132,7 +129,7 @@ class MagicBlue:
         # send test message, read bulb name
         try:
             self.get_device_name()
-        except NotConnectedError:
+        except btle.BTLEException:
             self.disconnect()
             return False
 
@@ -143,9 +140,9 @@ class MagicBlue:
         """
         :return: Device name
         """
-        # somehow, we have to read the handle and cannot read the UUID
-        handle = self._device.get_handle(UUID_CHARACTERISTIC_DEVICE_NAME)
-        return self._device.char_read_handle(handle)
+        buffer = self._device_name_characteristic.read()
+        buffer = buffer.replace(b'\x00', b'')
+        return buffer.decode('ascii')
 
     @connection_required
     def set_warm_light(self, intensity=1.0):
@@ -157,7 +154,7 @@ class MagicBlue:
         """
         brightness = int(intensity * 255)
         msg = Protocol.encode_set_brightness(brightness)
-        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
+        self._send_characteristic.write(msg)
 
     @connection_required
     def set_color(self, rgb_color):
@@ -166,7 +163,7 @@ class MagicBlue:
         :param rgb_color: color as a list of 3 values between 0 and 255
         """
         msg = Protocol.encode_set_rgb(*rgb_color)
-        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
+        self._send_characteristic.write(msg)
 
     @connection_required
     def set_random_color(self):
@@ -181,7 +178,7 @@ class MagicBlue:
         Turn off the light
         """
         msg = Protocol.encode_turn_off()
-        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
+        self._send_characteristic.write(msg)
 
     @connection_required
     def turn_on(self, brightness=None):
@@ -191,18 +188,18 @@ class MagicBlue:
                             brightness
         """
         msg = Protocol.encode_turn_on()
-        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
+        self._send_characteristic.write(msg)
 
         if brightness is not None:
             self.set_warm_light(brightness)
 
     @connection_required
-    def request_device_info(self):
+    def get_device_info(self):
         """
         Retrieve device info
         """
         msg = Protocol.encode_request_device_info()
-        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg, True)
+        self._send_characteristic.write(msg, True)
         return self._device_info
 
     @connection_required
@@ -212,19 +209,20 @@ class MagicBlue:
         :param datetime_:  datetime to set
         """
         msg = Protocol.encode_set_date_time(datetime_)
-        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg)
+        self._send_characteristic.write(msg)
 
     @connection_required
-    def request_date_time(self):
+    def get_date_time(self):
         """
         Retrieve date/time from bulb
         """
         msg = Protocol.encode_request_date_time()
-        self._device.char_write(UUID_CHARACTERISTIC_WRITE, msg, True)
+        self._send_characteristic.write(msg, True)
         return self._date_time
 
-    def _notification_handler(self, handle, buffer):
-        logger.debug("Got notification, handle: {}, buffer: {}".format(handle, buffer))
+    def handleNotification(self, handle, buffer):
+        logger.debug("Got notification, handle: {}, buffer: {}".format(handle,
+                                                                       buffer))
 
         if len(buffer) >= 11 and buffer[0] == 0x66 and buffer[11] == 0x99:
             self._device_info = Protocol.decode_device_info(buffer)
@@ -234,6 +232,39 @@ class MagicBlue:
 
     def __str__(self):
         return "<MagicBlue({}, {})>".format(self.mac_address, self.version)
+
+    @property
+    def _send_characteristic(self):
+        """Get BTLE characteristic for sending commands"""
+        characteristics = self._connection.getCharacteristics(
+                uuid=UUID_CHARACTERISTIC_WRITE)
+        if not characteristics:
+            return None
+        return characteristics[0]
+
+    @property
+    def _recv_characteristic(self):
+        """Get BTLE characteristic for receiving data"""
+        characteristics = self._connection.getCharacteristics(
+                uuid=UUID_CHARACTERISTIC_RECV)
+        if not characteristics:
+            return None
+        return characteristics[0]
+
+    @property
+    def _device_name_characteristic(self):
+        """Get BTLE characteristic for reading device name"""
+        characteristics = self._connection.getCharacteristics(
+                uuid=UUID_CHARACTERISTIC_DEVICE_NAME)
+        if not characteristics:
+            return None
+        return characteristics[0]
+
+    def _subscribe_to_recv_characteristic(self):
+        char = self._recv_characteristic
+        handle = char.valHandle + 1
+        msg = bytearray([0x01, 0x00])
+        self._connection.writeCharacteristic(handle, msg)
 
 
 class Protocol:
@@ -277,7 +308,7 @@ class Protocol:
         # python: 1-7 --> monday-sunday
         # bulb:   1-7 --> sunday-saturday
         day_of_week = (datetime_.isoweekday() + 1) % 7 or 7
-        year = datetime.year - 2000
+        year = datetime_.year - 2000
         return bytearray([0x10, 0x14,
                           year, datetime_.month, datetime_.day,
                           datetime_.hour, datetime_.minute, datetime_.second,
@@ -305,7 +336,7 @@ class Protocol:
         """
         info = {
             'device_type': buffer[1],
-            'power_on':    buffer[2] == 0x23,
+            'on':          buffer[2] == 0x23,
             'r':           buffer[6],
             'g':           buffer[7],
             'b':           buffer[8],
