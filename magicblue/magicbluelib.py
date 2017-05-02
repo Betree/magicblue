@@ -32,7 +32,7 @@ def connection_required(func):
     """
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        if not self._connection:
+        if self._connection is None:
             raise Exception("Not connected")
 
         return func(self, *args, **kwargs)
@@ -129,6 +129,10 @@ class MagicBlue:
             self.get_device_name()
         except btle.BTLEException:
             self.disconnect()
+            return False
+        except BrokenPipeError:
+            # bluepy-helper died
+            self._connection = None
             return False
 
         return True
