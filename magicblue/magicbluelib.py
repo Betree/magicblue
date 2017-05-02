@@ -87,10 +87,8 @@ class MagicBlue:
         """
         logger.debug("Connecting...")
 
-        addr_type = _figure_addr_type(self.mac_address, self.version)
-
         try:
-            connection = btle.Peripheral(self.mac_address, addr_type,
+            connection = btle.Peripheral(self.mac_address, self._addr_type,
                                          bluetooth_adapter_nr)
             self._connection = connection.withDelegate(self)
             self._subscribe_to_recv_characteristic()
