@@ -13,11 +13,13 @@ import argparse
 import logging
 import os
 import sys
+from sys import platform as _platform
+
 import webcolors
 from bluepy.btle import Scanner, DefaultDelegate
-from sys import platform as _platform
 from magicblue.magicbluelib import MagicBlue
 from magicblue import __version__
+
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +58,9 @@ class MagicBlueShell:
             MagicBlueShell.Cmd('turn', self.cmd_turn, True,
                                help='Turn on / off the bulb',
                                params=['on|off']),
+            MagicBlueShell.Cmd('read', self.cmd_read, True,
+                               help='Read device_info/datetime from the bulb',
+                               params=['name|device_info|date_time']),
             MagicBlueShell.Cmd('exit', self.cmd_exit, False,
                                help='Exit the script')
         ]
@@ -63,7 +68,7 @@ class MagicBlueShell:
         self.bluetooth_adapter = bluetooth_adapter
         self._bulb_version = bulb_version
         self._magic_blue = None
-        self.last_scan = None
+        self._devices = []
 
     def start_interactive_mode(self):
         print('Magic Blue interactive shell v{}'.format(__version__))
@@ -104,14 +109,17 @@ class MagicBlueShell:
         return False
 
     def cmd_list_devices(self, *args):
+        scan_time = 300
         try:
             self.last_scan = ScanDelegate()
             scanner = Scanner().withDelegate(self.last_scan)
-            print('Listing Bluetooth LE devices in range for 5 minutes.'
-                  'Press CTRL+C to stop searching.')
+
+            print('Listing Bluetooth LE devices in range for {} seconds. '
+                  'Press CTRL+C to abort searching.'.format(scan_time))
             print('{: <5} {: <30} {: <12}'.format('ID', 'Name', 'Mac address'))
             print('{: <5} {: <30} {: <12}'.format('--', '----', '-----------'))
-            scanner.scan(350)
+
+            scanner.scan(scan_time)
         except KeyboardInterrupt:
             print('\n')
         except RuntimeError as e:
@@ -123,13 +131,17 @@ class MagicBlueShell:
         if len(args[0][0]) < 4 and self.last_scan:
             try:
                 dev_id = int(args[0][0]) - 1
-                mac_address = self.last_scan.devices[dev_id].addr
+                entry = self.last_scan.devices[dev_id]
+                mac_address = entry.addr
+                addr_type = entry.addrType
             except Exception:
                 logger.error('Bad ID / MAC address : {}'.format(args[0][0]))
                 return False
         else:
             mac_address = args[0][0]
-        self._magic_blue = MagicBlue(mac_address, self._bulb_version)
+        self._magic_blue = MagicBlue(mac_address,
+                                     version=self._bulb_version,
+                                     addr_type=addr_type)
         self._magic_blue.connect(self.bluetooth_adapter)
         logger.info('Connected')
 
@@ -142,6 +154,17 @@ class MagicBlueShell:
             self._magic_blue.turn_on()
         else:
             self._magic_blue.turn_off()
+
+    def cmd_read(self, *args):
+        if args[0][0] == 'name':
+            name = self._magic_blue.get_device_name()
+            logger.info('Received name: {}'.format(name))
+        elif args[0][0] == 'device_info':
+            device_info = self._magic_blue.get_device_info()
+            logger.info('Received device_info: {}'.format(device_info))
+        elif args[0][0] == 'date_time':
+            datetime_ = self._magic_blue.get_date_time()
+            logger.info('Received datetime: {}'.format(datetime_))
 
     def cmd_set_color(self, *args):
         color = args[0][0]
@@ -202,7 +225,8 @@ class ScanDelegate(DefaultDelegate):
             raw_name = dev.getValueText(9)
             dev_name = raw_name.split('\x00')[0] if raw_name else "NO_NAME"
             print('{: <5} {: <30} {: <12}'.format(len(self.devices),
-                                                  dev_name, dev.addr))
+                                                  dev_name,
+                                                  dev.addr))
 
 
 def get_params():

@@ -68,9 +68,27 @@ Go to the lib folder (usually `/usr/local/lib/python3.4/dist-packages/bluepy-1.0
 
 ## Usage
 
-**Library needs root permissions to use Bluetooth features.**
+**Library needs elevated permissions to use Bluetooth features. You can either run as root (required for magicblueshell), or give `hcitool` special capabilities (see next section.)**
 
 If you run into problems during devices listing or connect, try to follow this procedure to ensure your Bluetooth interface works correctly : [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
+
+### Giving hcitool capabilities
+
+You can give `hcitool` capabilities by installing and using the libcap library/commands.
+
+* On most Debian systems, including Raspbian/Raspberry Pi
+
+```
+sudo apt-get install libcap2-bin
+sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
+```
+
+* Fedora
+
+```
+sudo dnf install libcap
+sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
+```
 
 ### Using it as an API
 
