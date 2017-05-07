@@ -118,7 +118,7 @@ Just launch magicblueshell as root user :
 
 ```
 $ sudo magicblueshell
-Magic Blue interactive shell v0.2.2
+Magic Blue interactive shell v0.3.0
 Type "help" for a list of available commands
 > help
  ----------------------------
