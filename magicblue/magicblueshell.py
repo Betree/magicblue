@@ -17,9 +17,12 @@ from sys import platform as _platform
 
 import webcolors
 from bluepy.btle import Scanner, DefaultDelegate
-from magicblue.magicbluelib import MagicBlue
-from magicblue import __version__
-
+try:
+    from magicblue.magicbluelib import MagicBlue
+    from magicblue import __version__
+except ImportError:
+    from magicbluelib import MagicBlue
+    from __init__ import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +72,7 @@ class MagicBlueShell:
         self._bulb_version = bulb_version
         self._magic_blue = None
         self._devices = []
+        self.last_scan = None
 
     def start_interactive_mode(self):
         print('Magic Blue interactive shell v{}'.format(__version__))
@@ -138,6 +142,7 @@ class MagicBlueShell:
                 logger.error('Bad ID / MAC address : {}'.format(args[0][0]))
                 return False
         else:
+            addr_type = None
             mac_address = args[0][0]
         self._magic_blue = MagicBlue(mac_address,
                                      version=self._bulb_version,
