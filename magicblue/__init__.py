@@ -5,7 +5,7 @@
     Unofficial Python API to control Magic Blue bulbs over Bluetooth
 """
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 
 try:
     from magicblue.magicbluelib import MagicBlue, Effect

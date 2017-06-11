@@ -260,7 +260,8 @@ def get_params():
                                                  'Blue bulbs over Bluetooth')
     parser.add_argument('-l', '--list_commands',
                         dest='list_commands',
-                        help='List available commands')
+                        help='List available commands',
+                        action='store_true')
     parser.add_argument('-c', '--command',
                         dest='command',
                         help='Command to execute')

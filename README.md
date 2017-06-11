@@ -129,11 +129,14 @@ COMMAND         PARAMETERS                    DETAILS
 help                                          Show this help
 list_devices                                  List Bluetooth LE devices in range
 ls              //                            //
+list_effects                                  List available effects
 connect         mac_address or ID             Connect to light bulb
 disconnect                                    Disconnect from current light bulb
 set_color       name or hexadecimal value     Change bulb's color
 set_warm_light  intensity[0.0-1.0]            Set warm light
+set_effect      effect_name speed[1-20]       Set an effect
 turn            on|off                        Turn on / off the bulb
+read            name|device_info|date_time    Read device_info/datetime from the bulb
 exit                                          Exit the script
 > ls
 Listing Bluetooth LE devices in range for 5 minutes.Press CTRL+C to stop searching.
@@ -182,6 +185,5 @@ So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03",
 
 ## TODO (help welcome!)
 
-- [Add support for functions (strobe, colors crossfade...etc)](https://github.com/Betree/magicblue/issues/19)
 - Use the [wiki info](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions) as a reference to implement turn_on / turn_off in a cleaner way (this may means being able to get the state from the bulb directly)
 - Create a proper documentation
