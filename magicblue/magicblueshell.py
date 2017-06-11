@@ -18,10 +18,10 @@ from sys import platform as _platform
 import webcolors
 from bluepy.btle import Scanner, DefaultDelegate
 try:
-    from magicblue.magicbluelib import MagicBlue
+    from magicblue.magicbluelib import MagicBlue, Effect
     from magicblue import __version__
 except ImportError:
-    from magicbluelib import MagicBlue
+    from magicbluelib import MagicBlue, Effect
     from __init__ import __version__
 
 logger = logging.getLogger(__name__)
@@ -47,6 +47,8 @@ class MagicBlueShell:
             MagicBlueShell.Cmd('list_devices', self.cmd_list_devices, False,
                                help='List Bluetooth LE devices in range',
                                aliases=['ls']),
+            MagicBlueShell.Cmd('list_effects', self.cmd_list_effects, False,
+                               help='List available effects',),
             MagicBlueShell.Cmd('connect', self.cmd_connect, False,
                                help='Connect to light bulb',
                                params=['mac_address or ID']),
@@ -58,6 +60,9 @@ class MagicBlueShell:
             MagicBlueShell.Cmd('set_warm_light', self.cmd_set_warm_light, True,
                                help='Set warm light',
                                params=['intensity[0.0-1.0]']),
+            MagicBlueShell.Cmd('set_effect', self.cmd_set_effect, True,
+                               help='Set an effect',
+                               params=['effect_name', 'speed[1-20]']),
             MagicBlueShell.Cmd('turn', self.cmd_turn, True,
                                help='Turn on / off the bulb',
                                params=['on|off']),
@@ -130,6 +135,10 @@ class MagicBlueShell:
             logger.error('Problem with the Bluetooth adapter : {}'.format(e))
             return False
 
+    def cmd_list_effects(self, *args):
+        for e in Effect.__members__.keys():
+            print(e)
+
     def cmd_connect(self, *args):
         # Use can enter either a mac address or the device ID from the list
         if len(args[0][0]) < 4 and self.last_scan:
@@ -188,6 +197,18 @@ class MagicBlueShell:
         except ValueError as e:
             logger.error('Invalid intensity value : {}'.format(str(e)))
             self.print_usage('set_color')
+
+    def cmd_set_effect(self, *args):
+        try:
+            [effect, speed] = args[0]
+            effect = Effect[effect]
+            speed = int(speed)
+        except KeyError as key:
+            logger.error('Unknown effect {}'.format(key))
+        except ValueError:
+            self.print_usage('set_effect')
+        else:
+            self._magic_blue.set_effect(effect, speed)
 
     def list_commands(self, *args):
         print(' ----------------------------')
