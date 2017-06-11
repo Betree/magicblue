@@ -8,7 +8,7 @@
 __version__ = "0.3.1"
 
 try:
-    from magicblue.magicbluelib import MagicBlue
+    from magicblue.magicbluelib import MagicBlue, Effect
 except ImportError:
-    from magicbluelib import MagicBlue
+    from magicbluelib import MagicBlue, Effect
 
