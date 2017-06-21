@@ -42,29 +42,31 @@ If you want to use this project with [HomeAssistant](https://home-assistant.io/)
 ### Linux
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
-* On most Debian systems
+* Prerequisite
 
-```
-sudo apt-get install libglib2.0-dev
-sudo pip3 install bluepy
-sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
-```
+  - Debian: `sudo apt-get install libglib2.0-dev`
+  - Fedora: `sudo dnf install glib2-devel`
 
-* Fedora
+* Install
 
-```
-sudo dnf install glib2-devel
-sudo pip3 install bluepy
-sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
-```
+    > sudo pip3 install magicblue
 
-* Raspberry Pi
+    ⚠️ If you get the error `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'` or
+    `ERROR:magicblue.magicblueshell:Unexpected error with command "ls": [Errno 8] Exec format error` :
+    This is a [known bug](https://github.com/IanHarvey/bluepy/issues/158) in
+    bluepy that sometimes doesn't get compiled when installed from Pypi on Raspberry Pi.
+    You can fix it by compiling the helper yourself :
+    Go to the lib folder (usually `/usr/local/lib/python3.4/dist-packages/bluepy-1.1.0-py3.5.egg/bluepy/`
+    but could be different, especially if you're using a virtual env) and
+    run `sudo make` (`make` should be enought for a virtual env)
 
-Follow the Debian procedure. If it doesn't work (unstable devices listing, commands have no effect) but you're sure that your bulb has a correct version (check the official app for that) then try updating bluez to the last version. You can follow [this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135) for more info.
+* Raspberry Pi specifics
 
-⚠️ If you get the error `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'` or similar :
-This is a [known bug](https://github.com/IanHarvey/bluepy/issues/158) in bluepy that sometimes doesn't get compiled when installed from Pypi on Raspberry Pi. You can fix it by compiling the helper yourself :
-Go to the lib folder (usually `/usr/local/lib/python3.4/dist-packages/bluepy-1.0.5-py3.4.egg/bluepy/` but could be different, especially if you're using a virtual env) and run `sudo make` (`make` should be enought for a virtual env)
+Follow the Debian procedure. If it doesn't work (unstable devices listing, commands have no effect)
+but you're sure that your bulb has a correct version (check the official app for that)
+then try updating bluez to the latest version. You can follow
+[this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135)
+for more info.
 
 ## Usage
 

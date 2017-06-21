@@ -6,8 +6,9 @@
 virtualenv ./venv
 source ./venv/bin/activate
 ```
-- Install bluepy `pip install bluepy webcolors`
-- Run magicblueshell with `sudo ./venv/bin/python magicblue/magicblueshell.py`
+- Install glib `sudo apt-get install libglib2.0-dev`
+- Install dependencies `pip install bluepy webcolors`
+- Run magicblueshell with `sudo ./venv/bin/python3 magicblue/magicblueshell.py`
 
 # Important
 
