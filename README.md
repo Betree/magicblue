@@ -42,29 +42,31 @@ If you want to use this project with [HomeAssistant](https://home-assistant.io/)
 ### Linux
 You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
 
-* On most Debian systems
+* Prerequisite
 
-```
-sudo apt-get install libglib2.0-dev
-sudo pip3 install bluepy
-sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
-```
+  - Debian: `sudo apt-get install libglib2.0-dev`
+  - Fedora: `sudo dnf install glib2-devel`
 
-* Fedora
+* Install
 
-```
-sudo dnf install glib2-devel
-sudo pip3 install bluepy
-sudo pip3 install git+https://github.com/Betree/pyMagicBlue.git
-```
+    > sudo pip3 install magicblue
 
-* Raspberry Pi
+    ⚠️ If you get the error `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'` or
+    `ERROR:magicblue.magicblueshell:Unexpected error with command "ls": [Errno 8] Exec format error` :
+    This is a [known bug](https://github.com/IanHarvey/bluepy/issues/158) in
+    bluepy that sometimes doesn't get compiled when installed from Pypi on Raspberry Pi.
+    You can fix it by compiling the helper yourself :
+    Go to the lib folder (usually `/usr/local/lib/python3.4/dist-packages/bluepy-1.1.0-py3.5.egg/bluepy/`
+    but could be different, especially if you're using a virtual env) and
+    run `sudo make` (`make` should be enought for a virtual env)
 
-Follow the Debian procedure. If it doesn't work (unstable devices listing, commands have no effect) but you're sure that your bulb has a correct version (check the official app for that) then try updating bluez to the last version. You can follow [this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135) for more info.
+* Raspberry Pi specifics
 
-⚠️ If you get the error `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'` or similar :
-This is a [known bug](https://github.com/IanHarvey/bluepy/issues/158) in bluepy that sometimes doesn't get compiled when installed from Pypi on Raspberry Pi. You can fix it by compiling the helper yourself :
-Go to the lib folder (usually `/usr/local/lib/python3.4/dist-packages/bluepy-1.0.5-py3.4.egg/bluepy/` but could be different, especially if you're using a virtual env) and run `sudo make` (`make` should be enought for a virtual env)
+Follow the Debian procedure. If it doesn't work (unstable devices listing, commands have no effect)
+but you're sure that your bulb has a correct version (check the official app for that)
+then try updating bluez to the latest version. You can follow
+[this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135)
+for more info.
 
 ## Usage
 
@@ -129,11 +131,14 @@ COMMAND         PARAMETERS                    DETAILS
 help                                          Show this help
 list_devices                                  List Bluetooth LE devices in range
 ls              //                            //
+list_effects                                  List available effects
 connect         mac_address or ID             Connect to light bulb
 disconnect                                    Disconnect from current light bulb
 set_color       name or hexadecimal value     Change bulb's color
 set_warm_light  intensity[0.0-1.0]            Set warm light
+set_effect      effect_name speed[1-20]       Set an effect
 turn            on|off                        Turn on / off the bulb
+read            name|device_info|date_time    Read device_info/datetime from the bulb
 exit                                          Exit the script
 > ls
 Listing Bluetooth LE devices in range for 5 minutes.Press CTRL+C to stop searching.
@@ -182,6 +187,5 @@ So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03",
 
 ## TODO (help welcome!)
 
-- [Add support for functions (strobe, colors crossfade...etc)](https://github.com/Betree/magicblue/issues/19)
 - Use the [wiki info](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions) as a reference to implement turn_on / turn_off in a cleaner way (this may means being able to get the state from the bulb directly)
 - Create a proper documentation

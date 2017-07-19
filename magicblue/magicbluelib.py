@@ -11,11 +11,12 @@ import functools
 import logging
 import random
 from datetime import datetime, date, time
+from enum import Enum
 
 from bluepy import btle
 
 
-__all__ = ['MagicBlue']
+__all__ = ['MagicBlue', 'Effect']
 
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,9 @@ def _figure_addr_type(mac_address=None, version=None, addr_type=None):
     # prefer version
     if version == 9 or version == 10:
         return btle.ADDR_TYPE_PUBLIC
+    
+    if version == 8:
+        return btle.ADDR_TYPE_RANDOM
 
     # try using mac_address
     if mac_address is not None:
@@ -56,6 +60,32 @@ def _figure_addr_type(mac_address=None, version=None, addr_type=None):
             return btle.ADDR_TYPE_PUBLIC
 
     return btle.ADDR_TYPE_RANDOM
+
+
+class Effect(Enum):
+    """
+    Effect
+    """
+    seven_color_cross_fade = 0x25
+    red_gradual_change = 0x26
+    green_gradual_change = 0x27
+    blue_gradual_change = 0x28
+    yellow_gradual_change = 0x29
+    cyan_gradual_change = 0x2a
+    purple_gradual_change = 0x2b
+    white_gradual_change = 0x2c
+    red_green_cross_fade = 0x2d
+    red_blue_cross_fade = 0x2e
+    green_blue_cross_fade = 0x2f
+    seven_color_stobe_flash = 0x30
+    red_strobe_flash = 0x31
+    green_strobe_flash = 0x32
+    blue_strobe_flash = 0x33
+    yellow_strobe_flash = 0x34
+    cyan_strobe_flash = 0x35
+    purple_strobe_flash = 0x36
+    white_strobe_flash = 0x37
+    seven_color_jumping_change = 0x38
 
 
 class MagicBlue:
@@ -222,6 +252,18 @@ class MagicBlue:
         self._send_characteristic.write(msg, True)
         return self._date_time
 
+    @connection_required
+    def set_effect(self, effect, effect_speed):
+        """
+        Set an effect, with effect_speed as speed
+        :param effect: magicblue.Effect
+        :param effect_speed: integer (range: 1..20), where
+          each unit represents around 200ms
+        """
+        effect_no = effect.value
+        msg = Protocol.encode_set_effect(effect_no, effect_speed)
+        self._send_characteristic.write(msg)
+
     def handleNotification(self, handle, buffer):
         logger.debug("Got notification, handle: {}, buffer: {}".format(handle,
                                                                        buffer))
@@ -318,6 +360,13 @@ class Protocol:
                           0x00, 0x01])
 
     @staticmethod
+    def encode_set_effect(effect_no, effect_speed):
+        """
+        Construct a message to set effect
+        """
+        return bytearray([0xBB, effect_no, effect_speed, 0x44])
+
+    @staticmethod
     def encode_request_device_info():
         """
         Construct a message to request device info
@@ -337,14 +386,22 @@ class Protocol:
         Decode a message with device info
         """
         info = {
-            'device_type': buffer[1],
-            'on':          buffer[2] == 0x23,
-            'r':           buffer[6],
-            'g':           buffer[7],
-            'b':           buffer[8],
-            'brightness':  buffer[9],
-            'version':     buffer[10],
+            'device_type':  buffer[1],
+            'on':           buffer[2] == 0x23,
+            'effect_no':    buffer[3],
+            'effect':       None,
+            'effect_speed': buffer[5],
+            'r':            buffer[6],
+            'g':            buffer[7],
+            'b':            buffer[8],
+            'brightness':   buffer[9],
+            'version':      buffer[10],
         }
+        try:
+            effect_no = info['effect_no']
+            info['effect'] = Effect(effect_no)
+        except ValueError:
+            pass
         return info
 
     @staticmethod
