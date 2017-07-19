@@ -49,6 +49,9 @@ def _figure_addr_type(mac_address=None, version=None, addr_type=None):
     if version == 9 or version == 10:
         return btle.ADDR_TYPE_PUBLIC
 
+    if version == 8:
+        return btle.ADDR_TYPE_RANDOM
+    
     # try using mac_address
     if mac_address is not None:
         mac_address_num = int(mac_address.replace(':', ''), 16)
