@@ -21,6 +21,7 @@ There are multiple versions of the bulb, some of them may need development to be
 <table>
   <tr>
     <th>Bulb Version<br></th>
+    <th>v6</th>
     <th>v7</th>
     <th>v8</th>
     <th>v9</th>
@@ -28,6 +29,7 @@ There are multiple versions of the bulb, some of them may need development to be
   </tr>
   <tr>
     <td>Status</td>
+    <td>☑️</td>
     <td>☑️</td>
     <td>☑️<br></td>
     <td>☑️</td>
