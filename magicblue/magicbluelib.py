@@ -47,7 +47,7 @@ def _figure_addr_type(mac_address=None, version=None, addr_type=None):
         return addr_type
 
     # prefer version
-    if version == 9 or version == 10:
+    if version in [6, 9, 10]:
         return btle.ADDR_TYPE_PUBLIC
 
     if version == 8:
