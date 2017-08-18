@@ -100,7 +100,7 @@ sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
 >>> from magicblue import MagicBlue
 
 >>> bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
->>> bulb = MagicBlue(bulb_mac_address)
+>>> bulb = MagicBlue(bulb_mac_address, 9) # Replace 9 by whatever your version is (default: 7)
 >>> bulb.connect()
 >>> bulb.set_color([255, 0, 0])         # Set red
 >>> bulb.set_random_color()             # Set random
