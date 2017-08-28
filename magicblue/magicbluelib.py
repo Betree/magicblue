@@ -29,7 +29,7 @@ UUID_CHARACTERISTIC_DEVICE_NAME = btle.UUID('2a00')
 
 def connection_required(func):
     """Raise an exception before calling the actual function if the device is
-    not connection.
+    not connected.
     """
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
@@ -50,9 +50,9 @@ def _figure_addr_type(mac_address=None, version=None, addr_type=None):
     if version in [6, 9, 10]:
         return btle.ADDR_TYPE_PUBLIC
 
-    if version == 8:
+    if version == 7 or version == 8:
         return btle.ADDR_TYPE_RANDOM
-    
+
     # try using mac_address
     if mac_address is not None:
         mac_address_num = int(mac_address.replace(':', ''), 16)
