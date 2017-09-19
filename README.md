@@ -2,21 +2,19 @@
 
 # MagicBlue - Control your Magic Blue bulbs over bluetooth
 
-The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb on the market : you can get it for as low as ~8€/9$ on sites like
-[Gearbest](http://www.gearbest.com/smart-light-bulb/pp_230349.html). It works pretty good and comes with mobile apps.
+The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb
+on the market : you can get it for as low as ~8€/9$ on sites like
+[Gearbest](http://www.gearbest.com/smart-light-bulb/pp_230349.html).
+It works pretty good and comes with mobile apps.
 
-Unfortunately I haven't found any API or documentation for it, which is why I started this project.
+Unfortunately I haven't found any API or documentation for it, which is
+why I started this project.
 
-I haven't fully retro-engineered the protocol yet so it's not complete but
-[Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
-[How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
-should give you enough details to start working on your own implementation if you need to port this for another
-language / platform.
-On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/research/bluetooth) you'll also find capture of bluetooth packets exchanged between Android and the bulb (open hci_capture.log with Wireshark).
 
-Tested on Linux and Raspberry Pi. I'll be happy to get your feedback on other platforms !
-
-There are multiple versions of the bulb, some of them may need development to be compatible with this project. If you have a different bulb version you can try to sniff bluetooth communications. Reverse-engeeniring information and pull requests are more than welcome 😺
+There are multiple versions of the bulb, some of them may need development
+to be compatible with this project. If you have a different bulb version
+you can try to sniff bluetooth communications. Reverse-engineering
+information and pull requests are more than welcome 😺
 
 <table>
   <tr>
@@ -39,10 +37,15 @@ There are multiple versions of the bulb, some of them may need development to be
 
 ## Installation
 ### HomeAssistant
-If you want to use this project with [HomeAssistant](https://home-assistant.io/) you'll need to install `magicblue` as described below then use the component available here : https://github.com/xiaohuim/homeassistant-magicblue
+If you want to use this project with [HomeAssistant](https://home-assistant.io/)
+you'll need to install `magicblue` as described below then use the
+component available here: https://github.com/Betree/homeassistant-magicblue
+
+MagicBlue is not compatible with Windows.
 
 ### Linux
-You must use python 3+ and have a proper Bluetooth 4.0 interface installed on your machine.
+You must use python 3+ and have a proper Bluetooth 4.0 interface
+installed on your machine.
 
 * Prerequisite
 
@@ -64,18 +67,17 @@ You must use python 3+ and have a proper Bluetooth 4.0 interface installed on yo
         You can fix it by compiling the helper yourself :
         Go to the lib folder (usually `/usr/local/lib/python3.5/dist-packages/bluepy-1.1.2-py3.5.egg/bluepy/`
         but could be different, especially if you're using a virtual env) and
-        run `sudo make` (`make` should be enought for a virtual env)
-
+        run `sudo make` (`make` should be enought for a virtual env).
         More info: https://github.com/IanHarvey/bluepy/issues/158
     </details>
 
 * Raspberry Pi specifics
 
-Follow the Debian procedure. If it doesn't work (unstable devices listing, commands have no effect)
-but you're sure that your bulb has a correct version (check the official app for that)
-then try updating bluez to the latest version. You can follow
-[this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135)
-for more info.
+    Follow the Debian procedure. If it doesn't work (unstable devices listing,
+    commands have no effect) but you're sure that your bulb has a correct
+    version (check the official app for that) then try updating bluez to the
+    latest version. You can follow [this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135)
+    for more info.
 
 ## Usage
 
@@ -87,32 +89,24 @@ If you run into problems during devices listing or connect, try to follow this p
 
 You can give `hcitool` capabilities by installing and using the libcap library/commands.
 
-* On most Debian systems, including Raspbian/Raspberry Pi
+Install `libcap2-bin` on debian-based systems or libcap for Fedora then run:
 
-```
-sudo apt-get install libcap2-bin
-sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
-```
-
-* Fedora
-
-```
-sudo dnf install libcap
+```bash
 sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
 ```
 
 ### Using it as an API
 
-```
->>> from magicblue import MagicBlue
+```python
+from magicblue import MagicBlue
 
->>> bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
->>> bulb = MagicBlue(bulb_mac_address)
->>> bulb.connect()
->>> bulb.set_color([255, 0, 0])         # Set red
->>> bulb.set_random_color()             # Set random
->>> bulb.turn_off()                     # Turn off the light
->>> bulb.turn_on()                      # Set white light
+bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
+bulb = MagicBlue(bulb_mac_address)
+bulb.connect()
+bulb.set_color([255, 0, 0])         # Set red
+bulb.set_random_color()             # Set random
+bulb.turn_off()                     # Turn off the light
+bulb.turn_on()                      # Set white light
 ```
 
 ### Using it as a tool
@@ -127,7 +121,7 @@ Also **don't forget to specify your bulb version with `-b` if it's something els
 #### Using the interactive shell
 Just launch magicblueshell as root user :
 
-```
+```bash
 $ sudo magicblueshell
 Magic Blue interactive shell v0.3.0
 Type "help" for a list of available commands
@@ -192,3 +186,16 @@ optional arguments:
 So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03", just run :
     
 > sudo magicblueshell -c 'set_color red' -m C7:17:1D:43:39:03
+
+
+## Contributing
+
+The protoc isn't fully retro-engineered the protocol yet so it's not complete but
+[Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
+[How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
+should give you enough details to start working on your own implementation if you need to port this for another
+language / platform.
+On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/research/bluetooth) you'll also find capture of bluetooth packets exchanged between Android and the bulb (open hci_capture.log with Wireshark).
+
+To contribute to this repo, start with [CONTRIBUTING.md](https://github.com/Betree/magicblue/blob/staging/CONTRIBUTING.md)
+then check [open issues](https://github.com/Betree/magicblue/issues)
