@@ -60,7 +60,7 @@ installed on your machine.
     `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'`
     or
     `ERROR:magicblue.magicblueshell:Unexpected error with command "ls": Helper exited`
-    checkout details below.
+    check the details below.
     <details>
         This is a known bug in bluepy that sometimes doesn't get compiled
         when installed from Pypi.
@@ -114,10 +114,6 @@ Script must be run as root.
 
 You can always specify which bluetooth adapter (default: hci0) you want to use by specifying it with the -a option.
 
-Also **don't forget to specify your bulb version with `-b` if it's something else than 7**. Example :
-`sudo magicblueshell -b 10` to run with version 10
-
-
 #### Using the interactive shell
 Just launch magicblueshell as root user :
 
@@ -158,8 +154,7 @@ Bye !
 ```
 
 #### Passing command as an option
-Script can also be used by command line (for example to include it in custom shell scripts)
-Usage is defined as follow :
+Script can also be used by command line (for example to include it in custom shell scripts):
 
 ```
 usage: magicblueshell [-h] [-l LIST_COMMANDS] [-c COMMAND] [-m MAC_ADDRESS]
@@ -190,12 +185,12 @@ So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03",
 
 ## Contributing
 
-The protoc isn't fully retro-engineered the protocol yet so it's not complete but
+To contribute to this repo, start with [CONTRIBUTING.md](https://github.com/Betree/magicblue/blob/staging/CONTRIBUTING.md)
+then check [open issues](https://github.com/Betree/magicblue/issues)
+
+The protocol isn't fully retro-engineered but
 [Characteristics list page](https://github.com/Betree/pyMagicBlue/wiki/Characteristics-list) and
 [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
 should give you enough details to start working on your own implementation if you need to port this for another
 language / platform.
 On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/research/bluetooth) you'll also find capture of bluetooth packets exchanged between Android and the bulb (open hci_capture.log with Wireshark).
-
-To contribute to this repo, start with [CONTRIBUTING.md](https://github.com/Betree/magicblue/blob/staging/CONTRIBUTING.md)
-then check [open issues](https://github.com/Betree/magicblue/issues)
