@@ -53,14 +53,21 @@ You must use python 3+ and have a proper Bluetooth 4.0 interface installed on yo
 
     > sudo pip3 install magicblue
 
-    ⚠️ If you get the error `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'` or
-    `ERROR:magicblue.magicblueshell:Unexpected error with command "ls": [Errno 8] Exec format error` :
-    This is a [known bug](https://github.com/IanHarvey/bluepy/issues/158) in
-    bluepy that sometimes doesn't get compiled when installed from Pypi on Raspberry Pi.
-    You can fix it by compiling the helper yourself :
-    Go to the lib folder (usually `/usr/local/lib/python3.4/dist-packages/bluepy-1.1.0-py3.5.egg/bluepy/`
-    but could be different, especially if you're using a virtual env) and
-    run `sudo make` (`make` should be enought for a virtual env)
+    ⚠️ If you get an error like
+    `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'`
+    or
+    `ERROR:magicblue.magicblueshell:Unexpected error with command "ls": Helper exited`
+    checkout details below.
+    <details>
+        This is a known bug in bluepy that sometimes doesn't get compiled
+        when installed from Pypi.
+        You can fix it by compiling the helper yourself :
+        Go to the lib folder (usually `/usr/local/lib/python3.5/dist-packages/bluepy-1.1.2-py3.5.egg/bluepy/`
+        but could be different, especially if you're using a virtual env) and
+        run `sudo make` (`make` should be enought for a virtual env)
+
+        More info: https://github.com/IanHarvey/bluepy/issues/158
+    </details>
 
 * Raspberry Pi specifics
 
@@ -185,9 +192,3 @@ optional arguments:
 So if you want to change the color of bulb with mac address "C7:17:1D:43:39:03", just run :
     
 > sudo magicblueshell -c 'set_color red' -m C7:17:1D:43:39:03
-
-
-## TODO (help welcome!)
-
-- Use the [wiki info](https://github.com/Betree/magicblue/wiki/How-to-use-manually-with-Gatttool#functions) as a reference to implement turn_on / turn_off in a cleaner way (this may means being able to get the state from the bulb directly)
-- Create a proper documentation
