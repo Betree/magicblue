@@ -54,48 +54,31 @@ installed on your machine.
 
 * Install
 
-    > sudo pip3 install magicblue
+  > sudo pip3 install magicblue
 
-    ⚠️ If you get an error like
-    `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'`
-    or
-    `ERROR:magicblue.magicblueshell:Unexpected error with command "ls": Helper exited`
-    check the details below.
-    <details>
-        This is a known bug in bluepy that sometimes doesn't get compiled
-        when installed from Pypi.
-        You can fix it by compiling the helper yourself :
-        Go to the lib folder (usually `/usr/local/lib/python3.5/dist-packages/bluepy-1.1.2-py3.5.egg/bluepy/`
-        but could be different, especially if you're using a virtual env) and
-        run `sudo make` (`make` should be enought for a virtual env).
-        More info: https://github.com/IanHarvey/bluepy/issues/158
-    </details>
+  Library needs elevated permissions to use Bluetooth features. You can either run as root (required for magicblueshell), or give `hcitool` special capabilities (see [this link](https://github.com/Betree/magicblue/wiki/Giving-hcitool-capabilities))
 
-* Raspberry Pi specifics
+### Known errors
 
-    Follow the Debian procedure. If it doesn't work (unstable devices listing,
-    commands have no effect) but you're sure that your bulb has a correct
-    version (check the official app for that) then try updating bluez to the
-    latest version. You can follow [this post](https://community.home-assistant.io/t/xiaomi-mi-plants-monitor-flower/3388/135)
-    for more info.
+  * Bluepy not compiled (very common)
+  
+  If you get an error like `No such file or directory: '/usr/local/lib/python3.4/dist-packages/bluepy/bluepy-helper'`
+	or `ERROR:magicblue.magicblueshell:Unexpected error with command "ls": Helper exited`:
+	this is a known bug in bluepy that sometimes doesn't get compiled when installed from Pypi.
+	You can fix it by compiling the helper yourself :
+	Go to the lib folder (usually `/usr/local/lib/python3.5/dist-packages/bluepy-1.1.2-py3.5.egg/bluepy/`
+	but could be different, especially if you're using a virtual env) and
+	run `sudo make` (`make` should be enought for a virtual env).
+	
+  More info: https://github.com/IanHarvey/bluepy/issues/158
+  
+  * Other errors
+  
+  If you run into problems during devices listing or connect, try to follow this procedure to ensure your Bluetooth interface works correctly : [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
 
 ## Usage
 
-**Library needs elevated permissions to use Bluetooth features. You can either run as root (required for magicblueshell), or give `hcitool` special capabilities (see next section.)**
-
-If you run into problems during devices listing or connect, try to follow this procedure to ensure your Bluetooth interface works correctly : [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
-
-### Giving hcitool capabilities
-
-You can give `hcitool` capabilities by installing and using the libcap library/commands.
-
-Install `libcap2-bin` on debian-based systems or libcap for Fedora then run:
-
-```bash
-sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
-```
-
-### Using it as an API
+### Python API
 
 ```python
 from magicblue import MagicBlue
@@ -109,7 +92,7 @@ bulb.turn_off()                     # Turn off the light
 bulb.turn_on()                      # Set white light
 ```
 
-### Using it as a tool
+### From shell
 Script must be run as root.
 
 You can always specify which bluetooth adapter (default: hci0) you want to use by specifying it with the -a option.
