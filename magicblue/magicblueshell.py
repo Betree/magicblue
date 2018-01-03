@@ -76,7 +76,10 @@ class MagicBlueShell:
                                help='Read device_info/datetime from the bulb',
                                params=['name|device_info|date_time']),
             MagicBlueShell.Cmd('exit', self.cmd_exit, False,
-                               help='Exit the script')
+                               help='Exit the script'),
+            MagicBlueShell.Cmd('debug', self.cmd_debug, False,
+                               help='Enable/disable debug messages from lib',
+                               params=['on|off']),
         ]
 
         self.bluetooth_adapter = bluetooth_adapter
@@ -179,6 +182,14 @@ class MagicBlueShell:
             [bulb.turn_on() for bulb in self._bulbs]
         else:
             [bulb.turn_off() for bulb in self._bulbs]
+
+    def cmd_debug(self, args):
+        logging.basicConfig(level=logging.DEBUG)
+        l = logging.getLogger('magicblue.magicbluelib')
+        if args[0] == 'on':
+            l.setLevel(logging.DEBUG)
+        else:
+            l.setLevel(logging.OFF)
 
     def cmd_read(self, args):
         for bulb in self._bulbs:
