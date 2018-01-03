@@ -13,6 +13,7 @@ import argparse
 import logging
 import os
 import sys
+from datetime import datetime
 from sys import platform as _platform
 
 from webcolors import hex_to_rgb, name_to_rgb
@@ -66,6 +67,8 @@ class MagicBlueShell:
             MagicBlueShell.Cmd('set_effect', self.cmd_set_effect, True,
                                help='Set an effect',
                                params=['effect_name', 'speed[1-20]']),
+            MagicBlueShell.Cmd('set_date_time', self.cmd_set_date_time, True,
+                               help='Set current date/time'),
             MagicBlueShell.Cmd('turn', self.cmd_turn, True,
                                help='Turn on / off the bulb',
                                params=['on|off']),
@@ -219,6 +222,11 @@ class MagicBlueShell:
             self.print_usage('set_effect')
         else:
             [bulb.set_effect(effect, speed) for bulb in self._bulbs]
+
+    def cmd_set_date_time(self, *args):
+        now = datetime.now()
+        for bulb in self._bulbs:
+            bulb.set_date_time(now)
 
     def list_commands(self, *args):
         print(' ----------------------------')
