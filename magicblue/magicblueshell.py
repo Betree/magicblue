@@ -251,13 +251,13 @@ class MagicBlueShell:
         print(' ----------------------------')
         print('| List of available commands |')
         print(' ----------------------------')
-        print('{: <16}{: <30}{}'.format('COMMAND', 'PARAMETERS', 'DETAILS'))
-        print('{: <16}{: <30}{}'.format('-------', '----------', '-------'))
+        print('{: <16}{: <48}{}'.format('COMMAND', 'PARAMETERS', 'DETAILS'))
+        print('{: <16}{: <48}{}'.format('-------', '----------', '-------'))
         for command in self.available_cmds:
-            print('{: <16}{: <30}{}'.format(
+            print('{: <16}{: <48}{}'.format(
                     command.cmd_str, ' '.join(command.params), command.help))
             for alias in command.aliases:
-                print('{: <16}{: <30}{}'.format(alias, '//', '//'))
+                print('{: <16}{: <48}{}'.format(alias, '//', '//'))
 
     def cmd_exit(self, *args):
         print('Bye !')
