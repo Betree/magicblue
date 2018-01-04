@@ -14,6 +14,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+from pprint import pformat
 from sys import platform as _platform
 
 from webcolors import hex_to_rgb, name_to_rgb
@@ -74,7 +75,8 @@ class MagicBlueShell:
                                params=['on|off']),
             MagicBlueShell.Cmd('read', self.cmd_read, True,
                                help='Read device_info/datetime from the bulb',
-                               params=['name|device_info|date_time']),
+                               params=['name|device_info|' +
+                                       'date_time|time_schedule']),
             MagicBlueShell.Cmd('exit', self.cmd_exit, False,
                                help='Exit the script'),
             MagicBlueShell.Cmd('debug', self.cmd_debug, False,
@@ -185,15 +187,15 @@ class MagicBlueShell:
 
     def cmd_debug(self, args):
         logging.basicConfig(level=logging.DEBUG)
-        l = logging.getLogger('magicblue.magicbluelib')
+        lib_logger = logging.getLogger('magicblue.magicbluelib')
         if args[0] == 'on':
-            l.setLevel(logging.DEBUG)
+            lib_logger.setLevel(logging.DEBUG)
         else:
-            l.setLevel(logging.OFF)
+            lib_logger.setLevel(logging.OFF)
 
     def cmd_read(self, args):
         for bulb in self._bulbs:
-            print('-------------------')
+            logger.info('-------------------')
             if args[0] == 'name':
                 name = bulb.get_device_name()
                 logger.info('Received name: {}'.format(name))
@@ -203,6 +205,12 @@ class MagicBlueShell:
             elif args[0] == 'date_time':
                 datetime_ = bulb.get_date_time()
                 logger.info('Received datetime: {}'.format(datetime_))
+            elif args[0] == 'time_schedule':
+                timer_schedule = bulb.get_time_schedule()
+
+                logger.info('Time schedule:')
+                for timer in timer_schedule:
+                    logger.info('Timer: {}'.format(pformat(timer)))
 
     def cmd_set_color(self, args):
         color = args[0]
