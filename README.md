@@ -58,7 +58,9 @@ installed on your machine.
 
   > sudo pip3 install magicblue
 
-  Library needs elevated permissions to use Bluetooth features. You can either run as root (required for magicblueshell), or give `hcitool` special capabilities (see [this link](https://github.com/Betree/magicblue/wiki/Giving-hcitool-capabilities))
+  Library needs elevated permissions to use Bluetooth features. You can either
+  run as root (required for magicblueshell), or give `hcitool` special capabilities
+  (see [this link](https://github.com/Betree/magicblue/wiki/Giving-hcitool-capabilities))
 
 ### Known errors
 
@@ -76,7 +78,9 @@ installed on your machine.
   
   * Other errors
   
-  If you run into problems during devices listing or connect, try to follow this procedure to ensure your Bluetooth interface works correctly : [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
+  If you run into problems during devices listing or connect, try to follow
+  this procedure to ensure your Bluetooth interface works correctly :
+  [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
 
 ## Usage
 
@@ -168,4 +172,5 @@ The protocol isn't fully retro-engineered but
 [How to use manually with Gatttool page](https://github.com/Betree/pyMagicBlue/wiki/How-to-use-manually-with-Gatttool)
 should give you enough details to start working on your own implementation if you need to port this for another
 language / platform.
-On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/research/bluetooth) you'll also find capture of bluetooth packets exchanged between Android and the bulb (open hci_capture.log with Wireshark).
+On the [research/bluetooth branch](https://github.com/Betree/pyMagicBlue/tree/research/bluetooth)
+you'll also find capture of bluetooth packets exchanged between Android and the bulb (open hci_capture.log with Wireshark).
