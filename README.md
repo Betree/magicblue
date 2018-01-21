@@ -1,6 +1,8 @@
 ![MagicBlue Bulb](https://lut.im/xpaCaUNTaU/k6WRbc71KMMSFIln.jpg)
 
-# MagicBlue - Control your Magic Blue bulbs over bluetooth
+# MagicBlue - Cheap bluetooth bulbs
+
+[![Documentation Status](https://readthedocs.org/projects/magicblue/badge/?version=latest)](http://magicblue.readthedocs.io/en/latest/?badge=latest)
 
 The Magic Bulb is, as far as I know, the cheapest bluetooth RGB light bulb
 on the market : you can get it for as low as ~8€/9$ on sites like
@@ -97,17 +99,7 @@ sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
 
 ### Using it as an API
 
-```python
-from magicblue import MagicBlue
-
-bulb_mac_address = 'XX:XX:XX:XX:XX:XX'
-bulb = MagicBlue(bulb_mac_address, 9) # Replace 9 by whatever your version is (default: 7)
-bulb.connect()
-bulb.set_color([255, 0, 0])         # Set red
-bulb.set_random_color()             # Set random
-bulb.turn_off()                     # Turn off the light
-bulb.turn_on()                      # Set white light
-```
+Check the [API documentation](http://magicblue.readthedocs.io/en/latest/)
 
 ### Using it as a tool
 Script must be run as root.
