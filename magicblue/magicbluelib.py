@@ -64,28 +64,28 @@ def _figure_addr_type(mac_address=None, version=None, addr_type=None):
 
 class Effect(Enum):
     """
-    Effect
+    An enum of all the possible effects the bulb can accept
     """
-    seven_color_cross_fade = 0x25
-    red_gradual_change = 0x26
-    green_gradual_change = 0x27
-    blue_gradual_change = 0x28
-    yellow_gradual_change = 0x29
-    cyan_gradual_change = 0x2a
-    purple_gradual_change = 0x2b
-    white_gradual_change = 0x2c
-    red_green_cross_fade = 0x2d
-    red_blue_cross_fade = 0x2e
-    green_blue_cross_fade = 0x2f
-    seven_color_stobe_flash = 0x30
-    red_strobe_flash = 0x31
-    green_strobe_flash = 0x32
-    blue_strobe_flash = 0x33
-    yellow_strobe_flash = 0x34
-    cyan_strobe_flash = 0x35
-    purple_strobe_flash = 0x36
-    white_strobe_flash = 0x37
-    seven_color_jumping_change = 0x38
+    seven_color_cross_fade = 0x25       #:
+    red_gradual_change = 0x26           #:
+    green_gradual_change = 0x27         #:
+    blue_gradual_change = 0x28          #:
+    yellow_gradual_change = 0x29        #:
+    cyan_gradual_change = 0x2a          #:
+    purple_gradual_change = 0x2b        #:
+    white_gradual_change = 0x2c         #:
+    red_green_cross_fade = 0x2d         #:
+    red_blue_cross_fade = 0x2e          #:
+    green_blue_cross_fade = 0x2f        #:
+    seven_color_stobe_flash = 0x30      #:
+    red_strobe_flash = 0x31             #:
+    green_strobe_flash = 0x32           #:
+    blue_strobe_flash = 0x33            #:
+    yellow_strobe_flash = 0x34          #:
+    cyan_strobe_flash = 0x35            #:
+    purple_strobe_flash = 0x36          #:
+    white_strobe_flash = 0x37           #:
+    seven_color_jumping_change = 0x38   #:
 
 
 class Weekday(Enum):
@@ -110,7 +110,6 @@ class MagicBlue:
         """
         :param mac_address: device MAC address as a string
         :param version: bulb version as displayed in official app (integer)
-        :return:
         """
         self._connection = None
 
@@ -127,8 +126,10 @@ class MagicBlue:
     def connect(self, bluetooth_adapter_nr=0):
         """
         Connect to device
-        :param  bluetooth_adapter_nr: bluetooth adapter name as shown by
-                "hciconfig" command. Default : 0 for (hci0)
+        
+        :param bluetooth_adapter_nr: bluetooth adapter name as shown by
+            "hciconfig" command. Default : 0 for (hci0)
+        
         :return: True if connection succeed, False otherwise
         """
         logger.debug("Connecting...")
@@ -166,6 +167,8 @@ class MagicBlue:
     def test_connection(self):
         """
         Test if the connection is still alive
+        
+        :return: True if connected
         """
         if not self.is_connected():
             return False
@@ -198,6 +201,7 @@ class MagicBlue:
         Equivalent of what they call the "Warm light" property in the app that
         is a strong white / yellow color, stronger that any value you may get
         by setting rgb color.
+        
         :param intensity: the intensity between 0.0 and 1.0
         """
         brightness = int(intensity * 255)
@@ -208,6 +212,7 @@ class MagicBlue:
     def set_color(self, rgb_color):
         """
         Change bulb's color
+        
         :param rgb_color: color as a list of 3 values between 0 and 255
         """
         msg = Protocol.encode_set_rgb(*rgb_color)
@@ -232,8 +237,9 @@ class MagicBlue:
     def turn_on(self, brightness=None):
         """
         Set white color on the light
-        :param brightness:  a float value between 0.0 and 1.0 defining the
-                            brightness
+        
+        :param brightness: a float value between 0.0 and 1.0 defining the
+            brightness
         """
         msg = Protocol.encode_turn_on()
         self._send_characteristic.write(msg)
@@ -251,12 +257,13 @@ class MagicBlue:
         return self._device_info
 
     @connection_required
-    def set_date_time(self, datetime_):
+    def set_date_time(self, datetime_value):
         """
         Set date/time in bulb
-        :param datetime_:  datetime to set
+        
+        :param datetime_value: datetime to set
         """
-        msg = Protocol.encode_set_date_time(datetime_)
+        msg = Protocol.encode_set_date_time(datetime_value)
         self._send_characteristic.write(msg)
 
     @connection_required
@@ -272,9 +279,10 @@ class MagicBlue:
     def set_effect(self, effect, effect_speed):
         """
         Set an effect, with effect_speed as speed
-        :param effect: magicblue.Effect
-        :param effect_speed: integer (range: 1..20), where
-          each unit represents around 200ms
+        
+        :param effect: An effect (see :class:`.Effect`)
+        :param effect_speed: integer (range: 1..20) where
+            each unit represents around 200ms
         """
         effect_no = effect.value
         msg = Protocol.encode_set_effect(effect_no, effect_speed)
@@ -293,19 +301,22 @@ class MagicBlue:
     def set_time_schedule(self, timer_items):
         """
         Set the time schedule
+        
         :param timer_items: list with TimerItem, max of 6,
-                            dict with items:
-                              - used, boolean
-                              - turn, 'on'/'off'
-                              - date_time, datetime.datetime
-                              - time, datetime.time
-                              - repeat, set with MagicBlue.Weekday
-                              - effect, MagicBlue.Effect
-                              - effect_speed, 1..20
-                              - r, 0..255
-                              - g, 0..255
-                              - b, 0..255
-                            date_time and time+repeat are exclusive
+            dict with items:
+        
+            - used, boolean
+            - turn, 'on'/'off'
+            - date_time, datetime.datetime
+            - time, datetime.time
+            - repeat, set with MagicBlue.Weekday
+            - effect, MagicBlue.Effect
+            - effect_speed, 1..20
+            - r, 0..255
+            - g, 0..255
+            - b, 0..255
+            
+        **date_time and time+repeat are exclusive**
         """
         if len(timer_items) > 6:
             raise Exception("Maximum of 6 TimerItems allowed")
