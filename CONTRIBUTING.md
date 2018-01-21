@@ -1,13 +1,15 @@
 # Developing
 
 - Pull the repo
-- (optional) Create a virtual env and activate it
+- (optional) Create a virtual env and activate it:
+
 ```
 virtualenv ./venv
 source ./venv/bin/activate
 ```
+
 - Install glib `sudo apt-get install libglib2.0-dev`
-- Install dependencies `pip install bluepy webcolors`
+- Install dependencies `pip install -r requirements.txt`
 - Run magicblueshell with `sudo ./venv/bin/python3 magicblue/magicblueshell.py`
 
 # Important
