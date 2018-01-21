@@ -13,6 +13,8 @@ import argparse
 import logging
 import os
 import sys
+from datetime import datetime
+from pprint import pformat
 from sys import platform as _platform
 
 from webcolors import hex_to_rgb, name_to_rgb
@@ -66,14 +68,20 @@ class MagicBlueShell:
             MagicBlueShell.Cmd('set_effect', self.cmd_set_effect, True,
                                help='Set an effect',
                                params=['effect_name', 'speed[1-20]']),
+            MagicBlueShell.Cmd('set_date_time', self.cmd_set_date_time, True,
+                               help='Set current date/time'),
             MagicBlueShell.Cmd('turn', self.cmd_turn, True,
                                help='Turn on / off the bulb',
                                params=['on|off']),
             MagicBlueShell.Cmd('read', self.cmd_read, True,
                                help='Read device_info/datetime from the bulb',
-                               params=['name|device_info|date_time']),
+                               params=['name|device_info|' +
+                                       'date_time|time_schedule']),
             MagicBlueShell.Cmd('exit', self.cmd_exit, False,
-                               help='Exit the script')
+                               help='Exit the script'),
+            MagicBlueShell.Cmd('debug', self.cmd_debug, False,
+                               help='Enable/disable debug messages from lib',
+                               params=['on|off']),
         ]
 
         self.bluetooth_adapter = bluetooth_adapter
@@ -177,9 +185,17 @@ class MagicBlueShell:
         else:
             [bulb.turn_off() for bulb in self._bulbs]
 
+    def cmd_debug(self, args):
+        logging.basicConfig(level=logging.DEBUG)
+        lib_logger = logging.getLogger('magicblue.magicbluelib')
+        if args[0] == 'on':
+            lib_logger.setLevel(logging.DEBUG)
+        else:
+            lib_logger.setLevel(logging.OFF)
+
     def cmd_read(self, args):
         for bulb in self._bulbs:
-            print('-------------------')
+            logger.info('-------------------')
             if args[0] == 'name':
                 name = bulb.get_device_name()
                 logger.info('Received name: {}'.format(name))
@@ -189,6 +205,12 @@ class MagicBlueShell:
             elif args[0] == 'date_time':
                 datetime_ = bulb.get_date_time()
                 logger.info('Received datetime: {}'.format(datetime_))
+            elif args[0] == 'time_schedule':
+                timer_schedule = bulb.get_time_schedule()
+
+                logger.info('Time schedule:')
+                for timer in timer_schedule:
+                    logger.info('Timer: {}'.format(pformat(timer)))
 
     def cmd_set_color(self, args):
         color = args[0]
@@ -220,17 +242,22 @@ class MagicBlueShell:
         else:
             [bulb.set_effect(effect, speed) for bulb in self._bulbs]
 
+    def cmd_set_date_time(self, *args):
+        now = datetime.now()
+        for bulb in self._bulbs:
+            bulb.set_date_time(now)
+
     def list_commands(self, *args):
         print(' ----------------------------')
         print('| List of available commands |')
         print(' ----------------------------')
-        print('{: <16}{: <30}{}'.format('COMMAND', 'PARAMETERS', 'DETAILS'))
-        print('{: <16}{: <30}{}'.format('-------', '----------', '-------'))
+        print('{: <16}{: <48}{}'.format('COMMAND', 'PARAMETERS', 'DETAILS'))
+        print('{: <16}{: <48}{}'.format('-------', '----------', '-------'))
         for command in self.available_cmds:
-            print('{: <16}{: <30}{}'.format(
+            print('{: <16}{: <48}{}'.format(
                     command.cmd_str, ' '.join(command.params), command.help))
             for alias in command.aliases:
-                print('{: <16}{: <30}{}'.format(alias, '//', '//'))
+                print('{: <16}{: <48}{}'.format(alias, '//', '//'))
 
     def cmd_exit(self, *args):
         print('Bye !')

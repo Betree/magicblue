@@ -64,28 +64,41 @@ def _figure_addr_type(mac_address=None, version=None, addr_type=None):
 
 class Effect(Enum):
     """
-    Effect
+    An enum of all the possible effects the bulb can accept
     """
-    seven_color_cross_fade = 0x25
-    red_gradual_change = 0x26
-    green_gradual_change = 0x27
-    blue_gradual_change = 0x28
-    yellow_gradual_change = 0x29
-    cyan_gradual_change = 0x2a
-    purple_gradual_change = 0x2b
-    white_gradual_change = 0x2c
-    red_green_cross_fade = 0x2d
-    red_blue_cross_fade = 0x2e
-    green_blue_cross_fade = 0x2f
-    seven_color_stobe_flash = 0x30
-    red_strobe_flash = 0x31
-    green_strobe_flash = 0x32
-    blue_strobe_flash = 0x33
-    yellow_strobe_flash = 0x34
-    cyan_strobe_flash = 0x35
-    purple_strobe_flash = 0x36
-    white_strobe_flash = 0x37
-    seven_color_jumping_change = 0x38
+    seven_color_cross_fade = 0x25       #:
+    red_gradual_change = 0x26           #:
+    green_gradual_change = 0x27         #:
+    blue_gradual_change = 0x28          #:
+    yellow_gradual_change = 0x29        #:
+    cyan_gradual_change = 0x2a          #:
+    purple_gradual_change = 0x2b        #:
+    white_gradual_change = 0x2c         #:
+    red_green_cross_fade = 0x2d         #:
+    red_blue_cross_fade = 0x2e          #:
+    green_blue_cross_fade = 0x2f        #:
+    seven_color_stobe_flash = 0x30      #:
+    red_strobe_flash = 0x31             #:
+    green_strobe_flash = 0x32           #:
+    blue_strobe_flash = 0x33            #:
+    yellow_strobe_flash = 0x34          #:
+    cyan_strobe_flash = 0x35            #:
+    purple_strobe_flash = 0x36          #:
+    white_strobe_flash = 0x37           #:
+    seven_color_jumping_change = 0x38   #:
+
+
+class Weekday(Enum):
+    """
+    Weekday
+    """
+    monday = 0x02
+    tuesday = 0x04
+    wednesday = 0x08
+    thursday = 0x10
+    friday = 0x20
+    saturday = 0x40
+    sunday = 0x80
 
 
 class MagicBlue:
@@ -97,7 +110,6 @@ class MagicBlue:
         """
         :param mac_address: device MAC address as a string
         :param version: bulb version as displayed in official app (integer)
-        :return:
         """
         self._connection = None
 
@@ -105,14 +117,19 @@ class MagicBlue:
         self.version = version
         self._addr_type = _figure_addr_type(mac_address, version, addr_type)
 
+        self.__time_schedule_buffer = None
+
         self._device_info = {}
         self._date_time = None
+        self._time_schedule = []
 
     def connect(self, bluetooth_adapter_nr=0):
         """
         Connect to device
-        :param  bluetooth_adapter_nr: bluetooth adapter name as shown by
-                "hciconfig" command. Default : 0 for (hci0)
+        
+        :param bluetooth_adapter_nr: bluetooth adapter name as shown by
+            "hciconfig" command. Default : 0 for (hci0)
+        
         :return: True if connection succeed, False otherwise
         """
         logger.debug("Connecting...")
@@ -150,6 +167,8 @@ class MagicBlue:
     def test_connection(self):
         """
         Test if the connection is still alive
+        
+        :return: True if connected
         """
         if not self.is_connected():
             return False
@@ -182,6 +201,7 @@ class MagicBlue:
         Equivalent of what they call the "Warm light" property in the app that
         is a strong white / yellow color, stronger that any value you may get
         by setting rgb color.
+        
         :param intensity: the intensity between 0.0 and 1.0
         """
         brightness = int(intensity * 255)
@@ -192,6 +212,7 @@ class MagicBlue:
     def set_color(self, rgb_color):
         """
         Change bulb's color
+        
         :param rgb_color: color as a list of 3 values between 0 and 255
         """
         msg = Protocol.encode_set_rgb(*rgb_color)
@@ -216,8 +237,9 @@ class MagicBlue:
     def turn_on(self, brightness=None):
         """
         Set white color on the light
-        :param brightness:  a float value between 0.0 and 1.0 defining the
-                            brightness
+        
+        :param brightness: a float value between 0.0 and 1.0 defining the
+            brightness
         """
         msg = Protocol.encode_turn_on()
         self._send_characteristic.write(msg)
@@ -235,12 +257,13 @@ class MagicBlue:
         return self._device_info
 
     @connection_required
-    def set_date_time(self, datetime_):
+    def set_date_time(self, datetime_value):
         """
         Set date/time in bulb
-        :param datetime_:  datetime to set
+        
+        :param datetime_value: datetime to set
         """
-        msg = Protocol.encode_set_date_time(datetime_)
+        msg = Protocol.encode_set_date_time(datetime_value)
         self._send_characteristic.write(msg)
 
     @connection_required
@@ -256,13 +279,54 @@ class MagicBlue:
     def set_effect(self, effect, effect_speed):
         """
         Set an effect, with effect_speed as speed
-        :param effect: magicblue.Effect
-        :param effect_speed: integer (range: 1..20), where
-          each unit represents around 200ms
+        
+        :param effect: An effect (see :class:`.Effect`)
+        :param effect_speed: integer (range: 1..20) where
+            each unit represents around 200ms
         """
         effect_no = effect.value
         msg = Protocol.encode_set_effect(effect_no, effect_speed)
         self._send_characteristic.write(msg)
+
+    @connection_required
+    def get_time_schedule(self):
+        """
+        Request the time schedule
+        """
+        msg = Protocol.encode_request_time_schedule()
+        self._send_characteristic.write(msg, True)
+        return self._time_schedule
+
+    @connection_required
+    def set_time_schedule(self, timer_items):
+        """
+        Set the time schedule
+        
+        :param timer_items: list with TimerItem, max of 6,
+            dict with items:
+        
+            - used, boolean
+            - turn, 'on'/'off'
+            - date_time, datetime.datetime
+            - time, datetime.time
+            - repeat, set with MagicBlue.Weekday
+            - effect, MagicBlue.Effect
+            - effect_speed, 1..20
+            - r, 0..255
+            - g, 0..255
+            - b, 0..255
+            
+        **date_time and time+repeat are exclusive**
+        """
+        if len(timer_items) > 6:
+            raise Exception("Maximum of 6 TimerItems allowed")
+
+        # send message by 20 bytes at a time
+        msg = Protocol.encode_set_time_schedule(timer_items)
+        while msg:
+            sub_msg = msg[0:20]
+            self._send_characteristic.write(sub_msg)
+            msg = msg[20:]
 
     def handleNotification(self, handle, buffer):
         logger.debug("Got notification, handle: {}, buffer: {}".format(handle,
@@ -270,9 +334,16 @@ class MagicBlue:
 
         if len(buffer) >= 11 and buffer[0] == 0x66 and buffer[11] == 0x99:
             self._device_info = Protocol.decode_device_info(buffer)
-
-        if len(buffer) >= 10 and buffer[0] == 0x13 and buffer[10] == 0x31:
+        elif len(buffer) >= 10 and buffer[0] == 0x13 and buffer[10] == 0x31:
             self._date_time = Protocol.decode_date_time(buffer)
+        elif len(buffer) >= 20 and buffer[0] == 0x25:  # start time_schedule
+            self.__time_schedule_buffer = bytearray(buffer)
+        elif self.__time_schedule_buffer is not None:  # reading time_schedule
+            self.__time_schedule_buffer += buffer
+            if len(self.__time_schedule_buffer) >= 87:
+                self._time_schedule = Protocol.decode_time_schedule(
+                        self.__time_schedule_buffer)
+                self.__time_schedule_buffer = None
 
     def __str__(self):
         return "<MagicBlue({}, {})>".format(self.mac_address, self.version)
@@ -367,6 +438,70 @@ class Protocol:
         return bytearray([0xBB, effect_no, effect_speed, 0x44])
 
     @staticmethod
+    def encode_set_time_schedule(timer_items):
+        """
+        Construct a message to set time schedule
+        """
+        off = {'used': False}
+        filled_timer_items = timer_items + \
+            [off] * (6 - len(timer_items))  # always 6 items
+        encoded_timer_items = [Protocol._encode_timer_item(timer_item)
+                               for timer_item in filled_timer_items]
+        return bytearray([0x23]) + \
+            encoded_timer_items[0] + \
+            encoded_timer_items[1] + \
+            encoded_timer_items[2] + \
+            encoded_timer_items[3] + \
+            encoded_timer_items[4] + \
+            encoded_timer_items[5] + \
+            bytearray([0x00, 0x32])
+
+    @staticmethod
+    def _encode_timer_item(timer_item):
+        b = bytearray(14)
+        if not timer_item['used']:
+            b[0] = 0x0F
+            return b
+
+        b[0] = 0xF0
+        if 'date_time' in timer_item:
+            dt = timer_item['date_time']
+            b[1] = dt.year - 2000
+            b[2] = dt.month
+            b[3] = dt.day
+            b[4] = dt.hour
+            b[5] = dt.minute
+            b[6] = dt.second
+        elif 'time' in timer_item:
+            t = timer_item['time']
+            b[1] = 0x00
+            b[2] = 0x00
+            b[3] = 0x00
+            b[4] = t.hour
+            b[5] = t.minute
+            b[6] = t.second
+
+        if 'repeat' in timer_item:
+            for weekday in timer_item['repeat']:
+                b[7] = b[7] | weekday.value
+
+        if timer_item['turn'] == 'off':
+            b[13] = 0x0F
+            return b
+
+        if 'effect' in timer_item:
+            b[8] = timer_item['effect'].value
+            b[9] = timer_item['effect_speed']
+
+        b[10] = timer_item['r']
+        b[11] = timer_item['g']
+        b[12] = timer_item['b']
+
+        b[13] = 0xF0 if timer_item['turn'] == 'on' else 0x0F
+
+        return b
+
+    @staticmethod
     def encode_request_device_info():
         """
         Construct a message to request device info
@@ -379,6 +514,13 @@ class Protocol:
         Construct a message to request date/time
         """
         return bytearray([0x12, 0x1A, 0x1B, 0x21])
+
+    @staticmethod
+    def encode_request_time_schedule():
+        """
+        Construct a message to request time schedule
+        """
+        return bytearray([0x24, 0x2A, 0x2B, 0x42])
 
     @staticmethod
     def decode_device_info(buffer):
@@ -420,3 +562,58 @@ class Protocol:
         time_ = time(hour, minute, second)
 
         return datetime.combine(date_, time_)
+
+    @staticmethod
+    def decode_time_schedule(buffer):
+        """
+        Decode a message with the time schedule
+        """
+        time_schedule = []
+
+        base = 1
+        for i in range(0, 6):
+            offset = base + i * 14
+            sub_buffer = buffer[offset:offset + 14]
+            timer_info = Protocol._decode_timer_item(sub_buffer)
+
+            time_schedule += [timer_info]
+
+        return time_schedule
+
+    @staticmethod
+    def _decode_timer_item(buffer):
+        timer_info = {}
+        timer_info['used'] = buffer[0] == 0xF0
+        if not timer_info['used']:
+            return timer_info
+
+        year = buffer[1]
+        month = buffer[2]
+        day = buffer[3]
+        hour = buffer[4]
+        minute = buffer[5]
+        second = buffer[6]
+        if month == 0:
+            timer_info['time'] = time(hour, minute, second)
+            timer_info['repeat'] = set()
+            for weekday in Weekday:
+                if weekday.value & buffer[7]:
+                    timer_info['repeat'].add(weekday)
+        else:
+            timer_info['date_time'] = datetime(2000 + year, month, day,
+                                               hour, minute, second)
+
+        try:
+            timer_info['effect'] = Effect(buffer[8])
+            timer_info['effect_speed'] = buffer[9]
+        except ValueError:
+            pass
+
+        if 'effect' not in timer_info:
+            timer_info['r'] = buffer[10]
+            timer_info['g'] = buffer[11]
+            timer_info['b'] = buffer[12]
+
+        timer_info['turn'] = 'on' if buffer[13] == 0xF0 else 'off'
+
+        return timer_info
