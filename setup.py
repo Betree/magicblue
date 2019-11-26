@@ -19,7 +19,7 @@ setuptools.setup(
     license='MIT',
     packages=['magicblue'],
     install_requires=[
-        'bluepy==1.1.4',
+        'bluepy==1.3.0',
         'webcolors'
     ],
     include_package_data=True,

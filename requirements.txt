@@ -1,6 +1,6 @@
 alabaster==0.7.10
 Babel==2.5.3
-bluepy==1.1.4
+bluepy==1.3.0
 certifi==2018.1.18
 chardet==3.0.4
 docutils==0.14
