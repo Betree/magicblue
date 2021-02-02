@@ -10,7 +10,7 @@ Jinja2==2.10
 magicblue==0.5.0
 MarkupSafe==1.0
 Pygments==2.2.0
-pytz==2017.3
+pytz==2021.1
 requests==2.18.4
 six==1.11.0
 snowballstemmer==1.2.1
