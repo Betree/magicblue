@@ -8,7 +8,7 @@ idna==2.6
 imagesize==0.7.1
 Jinja2==2.10
 magicblue==0.5.0
-MarkupSafe==1.0
+MarkupSafe==2.0.1
 Pygments==2.2.0
 pytz==2017.3
 requests==2.18.4
